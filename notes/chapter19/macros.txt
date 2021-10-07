@@ -1,0 +1,158 @@
+
+Macros
+  - there are three kinds of macros
+    1. Custom #[derive] macros that specify code added with the derive
+	   attribute used on structs and enums
+	2. Attribute-like macros that define custom attributes usable on any
+	   item
+	3. Function-like macros that look like function calls but operate
+	   on the tokens specified as their argument
+
+
+The Difference Between Macros and Functions
+  - macros are Rust code that writes Rust code -> Metaprogramming
+  - a function signature must declare the number and type of parameters
+  	that the function has --> macros can take a variable number of
+	parameters
+
+  - macros are expanded before the compiler interprets the meaning of the
+  	code, so a macro can, for example, implement a trait on a given type
+    -- a function cannot do this (implement a trait) because it gets
+	   called at runtime and a trait needs to be implemented at compile time
+
+
+  - downside: macro definitions are generally harder to write than functions
+
+  - you must bring macros into scope before you call them in a file, as opposed
+  	to functions which you can define anywhere and call anywhere
+
+
+Declarative Macros with macro_rules! for general metaprogramming
+  - these macros are used to generate code based on looking for regex-like
+  	patterns and then replacing this source code with new generated code
+
+  - example:
+
+    #[macro_export]
+	macro_rules! vec {
+	    ( $( $:expr ),* ) => {
+		    {
+			    let mut temp_vec = Vec::new();
+
+				$(
+				    temp_vec.push($x);
+				)*
+				temp_vec
+			}
+		};
+	}
+
+
+Procedural Macros for Generating Code from Attribtues
+  - procedural macros: act more like functions (and are a type of procedure)
+
+  - procedural macros accept some code as an input, operate on that
+  	code, and produce some code as an output rather than matching against
+	patterns and replacing the code with other code as declarative macros
+	do
+
+  - the three kinds of procedural macros (custom derive, attribute-like, and
+  	function-like) all work in a similar fashion
+
+
+  - the definitions of procedural macros must reside in their own crate
+  	with a special crate type
+
+  - using procedural macros looks like this (where some_attribute is a
+  	macro):
+
+      use proc_macro;
+
+	  #[some_attribute]
+	  pub fn some_name(input: TokenStream) -> TokenStream {
+	  
+	  }
+
+  - the source code that the macro is operating on makes up the input
+  	TokenStream, and the code the macro produces is the output TokenStream
+
+
+
+Creating Procedural Macro: Derive macro
+  - we have to create a lib crate for a procedural macro
+  - in Cargo.toml, we need to specify: `proc-macro = true`
+  	as well as include the dependencies of `syn = "1.0"` and `quote = "1.0"`
+
+    -- the proc_macro crate comes with Rust and is the compiler's API
+	   that allows us to read and manipulate Rust code from our code
+
+    -- the syn crate parses Rust code from a string into a data structure
+	   that we can perform operations on
+	-- the quote crate turns syn data structures back into Rust code
+	   * these creates make it much simpler to parse any sort of Rust
+	   	 code we might want to handle: writing a full parser for Rust
+		 code is no simple task
+
+
+  - there is a long process for defining a derive macro, best to reference
+  	this if you ever wish to implement your own derive macro
+
+Attribute-like macros
+  - attribute-like macros are similar to custom derive macros, but instead
+  	of generating code for the derive attribute, they allow you to create
+	new attributes
+	-- they're also more flexible: derive only works for structs
+	   and enums; attributes can be applied to other items as well,
+	   such as functions
+
+
+	-- example:
+
+	   #route[GET, "/")]
+	   fn index() { ... }
+
+
+    -- the signature of the macro definition function would look like this:
+
+	   #[proc_macro_attribute]
+	   pub fn route(attr: TokenStream, item: TokenStream) -> TokenStream { ... }
+
+    -- we have two parameters of type TokenStream
+	   * the first is for the contents of the attribute (the GET, "/" part)
+	   * the second is the body of the item the attribute is attached to:
+	   	 in this case, fn index() { ... }
+
+  - other than that, attribute-like macros work the same way as custom
+  	derive macros: you create a crate with the proc-macro crate type
+	and implement a function that generates the code you want
+
+Function-like macros
+  - function-like macros define macros that look like function calls
+  - similar to macro_rules! macros, they're more flexible than function
+  	calls (ex. they can take an unknown number of arguments)
+
+  - function-like macros take a TokenStream parameter and their definition
+  	manipulates that TokenStream using Rust code as the other two types
+	of procedural macros do
+	-- an example of a function-like macro is a `sql!` macro that might be
+	   called like so:
+
+	     let sql = sql!(SELECT * FROM posts WHERE id=1);
+
+    -- this macro would parse the SQL statement inside it and check
+	   that it's syntactically correct, which is much more complex
+	   processing than a macro_rules! macro can do
+
+    -- the macro would be defined like this:
+
+	   #[proc_macro]
+	   pub fn sql(input: TokenStream) -> TokenStream {
+
+    -- this definition is similar to the custom derive macro's signature:
+	   we receive the tokens that are inside the parentheses and return
+	   the code we wanted to generate
+
+
+	   
+  
+  

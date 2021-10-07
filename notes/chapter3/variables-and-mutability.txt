@@ -1,0 +1,40 @@
+
+Immutability
+  - by default variables are immutable
+  - we can add the 'mut' keyword in a variable declaration to make it mutable
+  - tradeoffs: it is often more efficient to make a large data structure mutable if we plan on
+  	changing one of its members, whereas for smaller data structures it may be more beneficial to code
+	in a functional style where we use immutable objects and create new objects for new values
+
+
+Constants
+  - You declare constants using the 'const' keyword instead of 'let', and the type of the value must be
+  	annotated
+  - constants can be declared in any scope, including the global scope, which makes them useful for values
+  	that many parts of code need to know about
+  - constants may be set only to a constant expression, not the result of a function call or any other value
+  	that could only be computed at runtime
+
+
+Shadowing
+  - Shadowing: you can declare a new variable with the same name as a previous variable
+    -- the first value is shadowed by the second -> the second variable's value is what appears
+	   when the variable is used
+
+  - example:
+  	fn main() {
+	  let x = 5; // valid
+	  let x = x + 1; // valid 
+	  let x = x * 2; // valid
+	  println!("The value of x is: {}", x); // prints 12
+    }
+
+  - shadowing is different from declaring a variable mut as we will get a compile-time error if we try
+  	to reassign this variable without using the let keyword
+  - shadowing is also different as we are effectively creating a new variable when we use the let keyword again,
+  	and therefore we can chagne the type of the value but reuse the same name.
+    -- shadowing spares us from having to come up with different names, such as spaces_str and spaces_num
+	-- if we try to use mut for the same use case of changing the type of a variable, we will get a compile
+	   time error
+	   * we are not allowed to mutate a variable's type
+  

@@ -1,0 +1,110 @@
+
+
+Declaring a mutable vs immutable var
+
+  let foo = 5; // immutable
+  let mut bar = 5; // mutable
+
+
+Creating a string
+  String::new() // returns a new string object
+
+T::func -> indicates that func is an associated function of the T type
+  -> i.e. a static method of T
+
+
+io::stdin()
+  -> return Stdin object that represents a handle to the standard input for
+ 	 your terminal
+
+io::stdin().read_line(&mut guess)
+  -> & indicates that this argument is a reference
+  -> references are immutable by default
+     -> therefore you need to write "&mut guess" to make it mutable
+
+
+Result type
+  - read_line returns a Result type
+  - Result returns either Ok or Err (it's an enum type)
+    -- Err specifies that an error occurred and contains additional
+	   information as to why the error occurred
+	-- Ok specifies that the operation was sucessful and contains the
+	   data that is returned by the function
+  - To handle a Result type, we add an additional function call
+  	that is tailed onto read_line -> .expect(...) which catches
+	the Result type and prints a message reporting the Err if one
+	occurs, or simply returns the return value contained in Ok
+	if Ok is returned
+	-- if we don't include this expect, the program will compile but
+	   a warning will be generated
+
+
+Print formatting
+  - we can use {} curly brackets to specify that a variable's value should
+  	be inserted into a printed string
+	i.e. println!("You guessed: {}", guess);
+	or: println!("x = {} and y = {}", x, y); --> "x = 5 and y = 10"
+
+
+
+
+
+Cargo.lock/Cargo.toml
+  - Cargo.toml: list the crates and versions you want
+  - Cargo.lock: will keep track of versions and make sure that breaking changes in new versions
+  				of the crates you are using will affect your project
+
+Cargo update
+  - $ cargo update
+    -- when you want to update a create, cargo update will ignore the Cargo.lock file and figure out
+	   all the latest versionst hat fit your specifications in Cargo.toml.
+	-- if this works, Cargo will write those versions to the Cargo.lock file
+	   * by default, Cargo will only look for versions within the minor version (where version is
+	   	 MAJOR.MINOR.PATCH), therefore it will only upgrade based on patches and will not upgrade
+		 beyond the minor version
+	   * if you want to update th major or minor version of a crate, you must explicitly update
+	   	 the version you wish to use in Cargo.toml (i.e. switching rand = "0.8.3" --> rand = "0.9.0")
+
+
+std::cmp::Ordering
+  - another enum type, has values: Less, Greater, Equal
+
+.cmp
+  - compare any two values i.e. variables x and y --> x.cmp(&y) => returns Ordering enum
+
+
+Rust typing
+  - Rust has strong static type system, but it also has type inference
+  - default number type: i32 --> 32b int
+    -- also has i64, u32, u64
+
+Shadowing
+  - we can redeclare a previously declared variable and from that point forward in the code
+  	the new type of the variable will hold
+	-- this is helpful when we are reading in a value of one type but would like to convert it to
+	   a different type, such as when we read in a string but want to convert it to a number type
+
+
+.trim()
+  - removes whitespace
+
+.parse()
+  - convert a string into some number type
+    -- we annotate the return value with the number type we specifically want
+
+  - parse() returns a Result type since parse could easily throw an error if it receives a string
+  	as input that is not a valid number
+
+
+match vs expect
+  - expect will generally still crash your program
+  - match allows us to catch an error and elegantly handle it
+  - using match vs expect is the difference between crashing on error and handling an error while maintaining
+  	the running of the program
+
+
+
+Matching
+  - matching can use the _ catchall similar to OCaml
+
+

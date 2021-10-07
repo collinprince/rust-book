@@ -1,0 +1,144 @@
+
+Path
+  - if we want to call a function, we need to know its path
+  
+  - a path can take two forms:
+  	1. absolute path: starts from a crate root by using a crate name or a literal crate
+	2. relative path: starts from the current module and uses self, super, or an identifier in the current
+	   module
+
+  - both absolute and relative paths are followed by one or more identifiers separated by double colons (::)
+
+  - how do we call add_to_waitlist == what's the path of the add_to_waitlist function?
+
+    example:
+
+	  mod front_of_hosue {
+	      mod hosting {
+		      fn add_to_waitlist() {}
+		  }
+	  }
+
+	  pub fn eat_at_restaurant() {
+	  	  // absolute path
+	      crate::front_of_house::hosting::add_to_waitlist();
+
+		  // relative path
+		  front_of_house::hosting::add_to_waitlist();
+	  }
+
+  - documentation: preference is to use absolute paths because it's more likely to move code definitions
+  	and item calls independently of each other
+
+
+Privacy In Rust Modules
+  - the above code example won't compile: "module `hosting` is private`
+
+  - modules aren't useful only for organizing your code -> they also define Rust's privacy boundary:
+    the line that encapsulates the implementation details external code isn't allowed to know about, call,
+	or rely on
+
+  - so, if you want to make an item like a function or struct private, you put it in a module
+
+  - privacy in Rust: all items (funcs, methods, structs, enums, modules, and constants) are private by default
+    -- items in a parent module can't use the private items inside child modules, but items in child
+	   modules can use the items in their ancestor modules
+
+    -- the reason is that child modules wrap and hide their implementation details, but the child modules
+	   can see the context in which they're defined
+
+	   * therefore, hiding inner implementation details is the default
+	   * but, you can exopse inner parts of child modules' code to outer ancestor modules by using
+	   	 the pub keyword to make in item public
+
+
+Exposing Path with the 'pub' Keyword
+  - the hosting module is private, but we want the eat_at_restaurant function in the parent module to have
+  	access to the add_to_waitlist function in the child module, so we mark the hosting module with
+	the 'pub' keyword
+
+	example:
+		mod front_of_house {
+		    pub mod hosting {
+			    fn add_to_waitlist() {}
+			}
+		}
+
+		pub fn eat_at_restaurant() {
+			// absolute path
+		    crate::front_of_hosue::hosting::add_to_waitlist();
+			
+			// relative path
+			front_of_house::hosting::add_to_waitlist();				
+		}
+
+  - this STILL does not compile:
+    -- adding the pub keyword in front of hosting makes this module public, but the contents of hosting
+	   are still private -> making the module pubklic doesn't make its contents public
+
+    -- the pub keyword on a module only lets code in its ancestor modules refer to it
+
+  - to make the add_to_waitlist function public, add the pub keyword before its definition
+
+  	example:
+
+	  mod front_of_house {
+	      pub mod hosting {
+		      pub fn add_to_waitlist() {}
+		  }
+	  }
+
+	  pub fn eat_at_restaurant() {
+	      // absolute path
+		  crate::front_of_house::hosting::add_to_waitlist();
+
+		  // relative path
+		  front_of_house::hosting::add_to_waitlist();
+	  }
+
+
+
+Starting Relative Paths with 'super'
+  - we can also construct relative paths that begin in the parent module by using 'super' at the start of
+  	the path -> this is like starting a filesystem path with the '..' syntax
+
+  - consider this code:
+
+      fn serve_order() {}
+
+	  mod back_of_house {
+	      fn fix_incorrect_order() {
+		      cook_order()
+			  super::serve_order();
+		  }
+
+		  fn cook_order() {}
+	  }
+
+  - the fix_incorrect_order function is in the back_of_house module, so we can use super to go to the
+  	parent module of back_house, which in this case is crate, the root.
+	-- from there, we look for serve_order and find it
+
+
+
+Making Structs and Enums Public
+  - we can also use pub to designate structs and enums as public, but there are a few extra details.
+
+    -- if we use pub before a struct definition, we make the struct public, but the struct's fields
+	   will still be private
+  	   * we can make each field public or not on a case-by-case basis
+	     --> we do this by adding the 'pub' keyword before the fields we wish to make public
+
+  - also note that public structs with private fields must provide a public associated function that
+  	constructs an instance of the struct
+	-- if the struct didn't have such a function, we couldn't create an instance of it in non-child
+	   modules because we couldn't set the value of a private field
+
+
+  - in contrast, if we make an enum public -> all of its variants are then public
+    -- we only need the 'pub' before the enum keyword
+
+	   
+   
+	  
+	

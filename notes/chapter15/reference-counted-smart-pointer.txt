@@ -1,0 +1,89 @@
+
+Rc<T>, the Reference Counted Smart Pointer
+  - In the majority of cases, ownership is clear: you know exactly which variable owns a given value
+
+  - However, there are cases when a single value might have multiple owners
+    -- for example, in graph data structures, multiple edges might point to the same node, and that
+	   node is conceptually owned by all of the edges that point to it
+
+	-- a node shouldn't be cleaned up unless it doesn't have any edges pointing to it
+
+  - To enable multiple ownership, Rust has a type called Rc<T>, which is an abbreviation for
+  	reference counting
+	-- the Rc<T> type keeps track of the number of references to a value to determine whether or
+	   not the value is still in use
+	-- if there are zero references to a value, the value can be cleaned up without any references
+	   becoming invalid
+
+
+  - we use the Rc<T> type when we want to allocate some data on the heap for multiple parts of our
+  	program to read and we can't determine at compile time which part will finish using the data
+	last
+	-- if we knew which part would finish last, we could just make that part the data's owner,
+	   and the normal ownership rules enforced at compile time would take effect
+
+  - Note: Rc<T> is only for use in single-threaded scenarios
+
+
+Using Rc<T> to Share Data
+  - we can rewrite our cons List implementation to use Rc instead of Box:
+
+      enum List {
+	      Cons(i32, Rc<List>),
+		  Nil,
+	  }
+
+	  use crate::List::{Cons, Nil};
+	  use std::rc::Rc;
+
+	  fn main() {
+	      let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil))))); // create a as owner of this Cons
+		  let b = Cons(3, Rc::clone(&a)); // create new Cons which also takes ownership of a's list
+		  let c = Cons(4, Rc::clone(&a)); // create another Cons which takes ownership of a's list too
+		  // the original list held by a now has three owners/references
+	  }
+
+  - when we create b, instead of taking ownership of a, we'll clone the Rc<List> that a is holding,
+  	thereby increasing the number of references from one to two and letting a and b share ownership
+	of the data in that Rc<List>
+	-- we'll also clone a when creating c, increasing the number of references from two to three
+
+  - Every time we call Rc::clone, the reference count to the data within the Rc<List> will increase,
+  	and the data won't be cleaned up unless there are zero references to it
+
+  - Rc::new(obj) --> create new reference counted object with 1 owner
+  - let a = Rc::clone(&obj) --> increase reference count of obj and mark a as a reference to obj
+
+  - we need to add a use statement to bring Rc<T> into scope because it's not in the prelude
+
+  - we could have called a.clone() rather than Rc::clone(&a), but Rust's convention is to use
+  	Rc::clone in this case
+	-- the implementatino of Rc::clone doesn't make a deep copy of all the data like most types'
+	   implementations of clone do
+	-- the call to Rc::clone only increments the reference count, which doesn't take much time
+	-- deep copies of data can take a lot of time
+
+  - By using Rc::clone for reference counting, we can visually distinguish between the deep-copy kinds
+  	of clones and the kinds of clones that increase the reference count
+	-- when looking for performance problems in the code, we only need to consider the deep-copy
+	   clones and can disregard calls to Rc::clone
+
+
+
+Cloning an Rc<T> Increases the Reference Count
+  - we don't have to call a function to decrease the reference count like we have to call Rc::clone
+  	to increase the reference count: the implementation of the Drop trait decreases the reference
+	   count automatically when an Rc<T> value goes out of scope
+
+  - via immutable references, Rc<T> allows you to share data between multiple parts of your program
+  	for reading only
+	-- if Rc<T> allowed you to have multiple mutable references too, you might violate
+	   one of the borrowing rules discussed in Chapter 4: multiple mutable borrows to the same
+	   place can cause data races and inconsistencies
+
+
+
+
+
+
+  

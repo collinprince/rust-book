@@ -1,0 +1,142 @@
+
+Ownership and memory management in Rust
+  - in Rust, memory is managed through a system of ownership with a set of rules that the compiler checks
+  	at compile time. None of the ownership features slow down your program while it's running
+
+
+Ownership Rules
+  - Each value in Rust has a variale that's called its owner
+  - There can only be one owner at a time
+  - When the owner goes out of scope, the value will be dropped
+
+
+Variable Scope
+  - Two important points in time:
+  	1. when a variable comes into scope
+	2. when a variable goes out of scope
+
+
+String literals vs Strings
+  - String literals are immutable & on the stack
+  - String type: allocated on the heap, able to store an amount of text that is unknown at compile time
+    -- you can create a String from a string literal using the from function:
+	
+	     let s = String::from("hello");
+
+
+  - String type can be mutated:
+
+      let mut s = String::from("hello");
+	  s.push_str(", world!"); // push_str() appends a literal to a String
+	  println!("{}", s); // prints `hello, world!`
+
+
+Memory and Allocation
+  - for string literals, since we know the contents at compile time, the text is hardcoded directly into
+  	the final executable
+	-- string literals are fast and efficient, but these properties only come from the string literal's
+	   immutability
+
+  - with the String type, in order to support a mutable, growable piece of text, we need to allocate an
+  	amount of memory on the heap, unknown at compile time, to hold the contents. This means
+	  * the memory must be requested from the memory allocator at runtime
+	  * we need a way of returning this memory to the allocator when we're done with our String
+
+  - the first part is done by us: when we call String::from, its implementation requests the memory
+  	it needs
+
+  - the second part is the tricky part:
+  	 -- GC approach: have GC manage memory
+	 -- self-management approach: have programmer be responsible for freeing mem
+
+  - Rust's approach to freeing memory:
+    -- the memory is automatically returned once the variable that owns it goes out of scope
+	-- Rust's implementation does through a call to function 'drop' which frees the memory from the heap
+	   * Rust calls drop automatically at the end of a variable's scope
+
+
+
+Ways Variables and Data Interact: Move
+  - for objects on the stack, when we create a new variable by assigning an old variable to it,
+  	we use a copy constructor and copy the value of the old value
+	example:
+		let x: u32 = 5;
+		let y: u32 = x; // y is a var independent of x and simply has the value of 5 it got from x
+
+  - for objects on the heap, move semantics are used. If we create a heap variable and assign another variable
+  	to it, then the new variable simply copies the pointer to the old variable's memory, and then the
+	old variable is invalidated -->  we move from x to y
+	example:
+		let x: String = String::from("hello");
+		let y: String = x; // y now points to the memory previously pointed to by x, and x is invalid
+
+
+Ways Variables and Data Interact: Clone
+  - if we do want to deeply copy the heap data of the String, not just the stack data, we can use a common
+  	method called clone
+  - clone is a method of heap objects
+  	example:
+	  let s1 = String::from("hello");
+	  let s2 = s1.clone();
+	  println!("s1 = {}, s2 = {}, s1, s2); // valid code since we have made a deep copy
+
+
+
+Stack-Only Data: Copy
+  - types such as integers that have a known size at compile time are stored entirely on the stack, so copies
+  	of the actual values are quick to make
+	-- there's no difference between shallow and deep copying here, so calling clone wouldn't do anything
+	   different from the usual shallow copying and we can leave it out
+
+
+
+Copy Trait
+  - Rust has a special annotation called the Copy trait
+    -- we can place it on types like integers that are stored on the stack
+	-- if a type implements the Copy trait, an older variable is still usable after assignment
+	-- Rust won't let us annotate a type with the Copy trait if the type, or any of its parts, has implemented
+	   the Drop trait
+
+
+  - Types that implement the Copy trait
+  	* All the integer types, e.g. u32
+	* Boolean type, bool
+	* all the floating point types, e.g. f32
+	* the character type, cahr
+	* Tuples, if they only contain types that also implement Copy
+	  -- for example, (i32, i32) implements Copy, but (i32, String) does not
+
+
+Ownership and Functions
+  - the semantics for passing a value to a function are similar to those for assigning a value to
+  	a variable. passing a variable to a function will move or copy, just as assignment does
+
+  - if we pass in an object that does not implement the Copy trait to a function call, then the ownership
+  	of the object is passed to the function. If we try to use that variable again after the function
+	call is complete, this will cause a compile time error
+
+
+
+Return Values and Scope
+  - Returning values can also transfer ownership
+    -- if we return a value from a function and assign this return value to a variable, the ownership of
+	   the return value is also assigned to the variable (i.e. we move the return value to the variable)
+
+	-- therefore, if a function takes in a String parameter, it will take ownership over the String,
+	   but it can then pass ownership back if it returns that String
+
+  - The ownership of a variable follows the same pattern every time: assigning a value to another variable
+  	moves it
+	-- when a variable that includes data on the heap goes out of scope, the value will be cleaned up by drop
+	   unless the data has been moved to be owned by another variable
+
+  - it's possible to return mutliple values using a tuple
+
+	   	  
+	  
+		
+		
+
+  
+	
+  

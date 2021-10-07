@@ -1,0 +1,186 @@
+
+Basics
+  - syntax: Vec<T>
+  - data implementation: single data structure that stores all values in a contiguous segment of memory
+
+Creating a New Vector
+
+  - call Vec::new(), shown below:
+      let v: Vec<i32> = Vec::new();
+
+  - we add a type annotation to specify what type of vector we want since vectors are implemented with
+  	generics
+
+  - in more realistic code, Rust can often infer the type of value you want to store once you insert
+  	values, so you rarely need to do this type annotation
+
+  - Rust provides a "vec!" macro for creating a vector based on some initial values and the type of
+  	the vector is inferred
+
+    example:
+	  let v = vec![1, 2, 3];  // creates Vec<i32> since i32 is default integer type
+
+
+
+Updating a Vector
+  - To create a vector and then add elements to it, we can use the push method, shown below:
+
+      let mut v = Vec::new();
+	  v.push(5);
+	  v.push(6);
+	  v.push(7);
+	  v.push(8);
+
+  - we must remember to make the vector mutable in order to modify, just as any other data type in Rust
+
+  - in this example, since we push all integers in our code, Rust infers the type of the vector to be
+  	Vec<i32>, so we don't need the Vec<i32> annotation
+
+
+Dropping a Vector Drops Its Elements
+  - like any other struct, a vector is freed when it goes out of scope
+  - when a vector gets dropped, all of its contents are also dropped, meaning those integers it holds will
+  	be cleaned up
+
+
+Reading Elements of Vectors
+  - There are two ways to reference a value stored in a vector
+  	  1. by using & and [], which gives us a reference
+	  2. by using the get method with the index passed as an argument, which gives us an Option<&T>
+
+  	example:
+
+	  let v = vec![1, 2, 3, 4, 5];
+	  
+	  let third: &i32 = &v[2];
+	  println!("The third element is {}", third);
+
+	  match v.get(2) {
+	      Some(third) => println!("The third element is {}", third),
+		  None => println!("There is no third element."),
+	  }
+
+  - Rust has two ways to reference an element so you can choose how the program behaves when you try
+  	to use an index value that the vector doesn't have an element for, example shown below:
+
+	  let v = vec![1, 2, 3, 4, 5];
+
+	  let does_not_exist = &v[100]; // will throw a panic
+	  let does_not_exist = v.get(100); // with return None, which we can handle later
+
+  - When the [] method is passed this incorrect index, it will cause a panic because it references
+  	a nonexistent element. This method is best used when you want your program to crash if there's
+	an attempt to access an element past the end of the vector
+
+  - When the get method is passed an index that is outside the vector, it returns None without panicking.
+  	You would use this method if accessing an element beyond the range of the vector happens occasionally
+	under normal circumstances
+
+    -- your code will then have logic to handle having either Some(&element) or None
+	-- this could be a good use case for a user-facing application in which we might want to give
+	   them a chance to try again rather than crashing the application
+
+
+  - when the program has a valid reference, the borrow checker enforces the ownership and borrowing rules
+  	to ensure this reference and any other references to the contents of the vector remain valid
+
+	-- the rule that states you can't have mutable and immutable references in the same scope still applies
+	   with vector element references: if we have an immutable reference to an element in a vector and then
+	   to try to add an element to the end, it won't work if we also try to refer to that element later
+	   in the function (shown below):
+
+	     let mut v = vec![1, 2, 3, 4, 5];
+
+		 let first = &v[0]; // immutable borrow occurs here
+
+		 v.push(6);
+
+		 println!("The first element is: {}", first); // immutable borrow later used here
+
+  - this errror is due to the way vectors work: adding a new element onto the end of the vector might
+  	require allocating new memory and copying the old elements to the new space
+	-- in this case, the reference to the first element would be pointing to deallocated memory
+
+
+
+Iterating Over the Values in a Vector
+  - we can use a for loop to get immutable references to each element in a vector and print them
+
+  	code:
+      let v = vec![100, 32, 57];
+	  for i in &v {
+	      println!("{}", i);
+	  }
+
+
+  - we can also iterate over mutable references to each element in a mutable vector in order to make
+  	changes to all elements:
+
+	  let mut v = vec![100, 32, 57];
+	  for i in &mut v {
+	      *i += 50;
+	  }
+
+    -- to change the value that the mutable reference refers to, we have to use the dereference operator (*)
+	   to get to the value in i before we can use the += operator
+
+
+
+Using an Enum to Store Multiple Types
+
+  - Vectors can only contain one type. Fortunately, the variants of an enum are defined under the same enum
+  	type, so when we need to store elements of a different type in a vector, we can define and use an enum
+
+	example:
+
+	  enum SpreadsheetCell {
+	      Int(i32),
+		  Float(f64),
+		  Text(String),
+	  }
+
+	  let row = vec![
+	      SpreadsheetCell::Int(3),
+		  SpreadsheetCell::Text(String::from("blue")),
+		  SpreadsheetCell::Float(10.12),
+	  ];
+
+  - Rust needs to know what types will be in the vector at compile time so it knows exactly how much memory
+  	on the heap will be needed to store each element. A seconary advantage is that we can be explicit
+	about what types are allowed in this vector
+
+	-- using an enum plus a match expression means that Rust will ensure at compile time that every
+	   possible case is handled
+
+  - when you're writing a program, if you don't know the exhaustive set of types the program will get
+  	at runtime to store in a vector, the enum technique won't work. Instead, you can use a trait object
+
+
+More Vector Methods
+  - there is a pop() to remove and return the last element, for example, in addition to other methods
+
+	   
+	   
+
+  
+  
+
+		 
+	   
+   
+
+
+	
+
+
+
+
+
+
+
+
+  
+	
+
+
+

@@ -1,0 +1,16 @@
+
+Installing Bianries from Crates.io with cargo install
+  - The 'cargo install' command allows you to install and use binary crates locally
+    -- this isn't intended to replace system packages; it's meant to be a convenient way for
+	   Rust developers to install tools that other have shared on crates.io
+
+    -- note that you can only install packages that have binary targets
+	   * a binary target is the runnable program that is created if the crate has a src/main.rs file
+	   	 or another file specified as a binary, as opposed to a library target that isn't runnable
+		 on its own but is suitable for including within other programs
+
+
+  - all binaries installed with 'cargo install' are stored in the installation root's bin folder
+
+  - example: we can install ripgrep as follows
+  	  '$ cargo install ripgrep'

@@ -1,0 +1,139 @@
+
+Statically typed
+  - Rust is statically typed, so all value types must be known at compile time
+  - in cases where there is an ambiguous type, such as declaring a variable with a number type,
+  	we must specifically annotate the number type we want, such as u32
+
+
+
+Scalar Types
+  - a scalar type represents a single value
+  - four primary scalar types:
+  	-- integers
+	-- floating-point numbers
+	-- booleans
+	-- characters
+
+Integer Types
+  - 8bit:   i8,   u8
+  - 16bit:  i16,  u16
+  - 32bit:  i32,  u32
+  - 64bit:  i64,  u64
+  - 128bit: i128, u128
+  - isize/usize --> the word length for the system you are using
+
+Integer literals
+  - you can specify the type of integer you desire with by specifying the type after the literal
+    -- e.g. 57u8 --> u8 value of 58
+  - You can use _ as a visual separator
+    -- e.g. 1_000 --> 1000
+
+Rust Integer Defaults
+  - Rust has an integer default of i32 --> generally the fastest, even on 64 bit systems
+
+
+Integer Overflow
+  - in debug mode, an integer overflow will result in a runtime error (panic) and the program will exit
+  - in release mode, integer overflow will occur silently and wrap around as it does in C
+
+  - overflow is considered an error and there are methods which exist to handle this error
+    -- wrap in all modes without error: wrapping_* e.g. wrapping_add
+	-- return the None value if there is overflow with the checked_* methods
+	-- return the value and a boolean indicating whether there was overflow with the overflow_* methods
+	-- saturate at the value's minimum or maximum values with saturating_* methods
+
+
+
+
+Floating Point Types
+  - f32, f64
+  - default type is f64, on modern CPUs it's roughly the same speed as f32 but has much greater precision
+
+  - example:
+  	let x = 2.0; // f64
+	let y: f32  2.0; // f32
+
+
+Numeric Operations
+  - Rust supports standard arithmetic operations for all number types e.g. +, -, *, /, %
+
+
+Boolean Type
+ - typename: bool
+ - values: true, false
+     let t = true; // bool
+     let f: bool = false; // explicit type annotation
+
+
+Character Type
+  - typename: char
+  - specified with single quotes rather than double quotes
+  - data spec: 4 bytes in size and represents a unicode scalar value
+  - value range: U+0000 to U+D7FF and U+E000 to U+10FFFF inclusive
+
+
+Compound Types
+  - compound types can group multiple values into one type
+  - two primitive compound types: tuples and arrays
+
+
+Tuple Type
+  - fixed length: once declared, they cannot grow or shrink in size
+  - create a tuple by writing a comma-separated list of values inside parentheses
+  - each position in the tuple has a type, and the types of the different values in the tuple don't have to be
+  	the same
+  - you can also add optional type annotations
+  - example:
+  	  let tup: (i32, f64, u8) = (500, 6.4, 1);
+
+  - we can use pattern matching to get the individual values out of a tuple
+    -- example:
+	    let tup: (i32, f64, u8) = (500, 6.4, 1);
+		let (x, y, z) = tup;
+		println!("The value of y is: {}", y); // prints 6.4
+
+
+  - we can also access a tuple element directly by using a period followed by the index of the value we want
+  	to access
+  - example:
+  	  let x: (i32, f64, u8) = (500, 6.4, 1);
+	  let five_hundred = x.0; // has value 500, type i32
+	  let six_point_four = x.1; // has value 6.4, type f64
+	  let one = x.2; // has value 1, type u8
+
+
+
+Array Type
+  - every element of an array must have the same type
+  - arrays in Rust have a fixed length
+  - values going into an array are written as a comma separated list inside square brackets
+  - example:
+      let a = [1, 2, 3, 4, 5];
+
+  - arrays are useful for when you want to allocate a group of items on the stack rather than on
+  	the heap (as you would with a vector)
+
+  - we can explicitly define the type/size of an array with type annotations as well
+  - example:
+  	  let a: [i32; 5] = [1, 2, 3, 4, 5]; // i32 array of size 5
+
+  - you can also define an array that contains the same value for each element by defining an initial value,
+  	followed by a semicolon, adn then the length of the array in square brackets, as shown below:
+	  let a = [3; 5]; // array of length 5 where each element is 3
+
+
+  - indexing is the same as C-style array indexing, e.g.:
+  	  let a = [1, 2, 3, 4, 5];
+	  let first = a[0];
+	  let second = a[1];
+
+
+  - Invalid Array element access: if at runtime an index that is greater than the greatest index of
+  	the array is accessed, Rust will throw a runtime error
+	-- a runtime index bound check is performed when accessing an array element, so the program
+	   will notice the invalid array access and panic rather than allowing possible invalid
+	   memory access
+
+
+  	
+

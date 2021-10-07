@@ -1,0 +1,62 @@
+
+Printing the Contents of a Struct
+  - Rust can print the contents of a struct, but we must opt into the default Display trait for debugging
+    -- in our println! macro call, instead of putting "{}", we must put "{:?}"
+	-- before our struct defn, we must write "#[derive(Debug)]" to use the default Debug Display
+	   trait for printing with println!
+
+
+Method Syntax
+  - methods: like normal functions, but declared within the context of a struct (or an enum or a trait object),
+  			 and their first parameter is always self, which represents the instance of the struct
+			 the method is being called on
+
+
+  - to define the function within the context of Rectangle, we start an impl (implementation) block
+    - we then create the area function within the impl block and declare the first parameter to be
+	  self in the signature and everywhere else within the body
+
+
+  - normally, a method will use "&self" i.e. a borrow of self as its first parameter rather than just
+  	plain "self" which would take ownership over the object and invalidate its use after the function
+	-- this would be reserved for a function where we might transform the object and don't want
+	   it to be used further in the code
+
+  - the main benefit of using methods instead of functions, in addition to using method syntax and not having
+  	to repeat the type of self in every method's signature, is for organization
+
+
+-> Operator
+  - C and C++ have the -> operator for pointers and . operator for objects
+  - Rust doesn't have an equivalent -> opreator
+  - Rust has a feature called automatic referencing and dereferencing
+    -- when you call a method with object.something(), Rust automatically adds in &, &mut, or * so object
+	   matches the signature of the method
+
+       in other words, the following are the same:
+	     p1.distance(&p2);
+		 (&p1).distance(&p2);
+    
+    -- the first one looks much cleaner. This automatic referencing behavior works because methods
+	   have a clear receiver -- the type of self
+	   * given the receiver and name of a method, Rust can figure out definitively whether the method is
+	   	 reading (&self), mutating (&mut self), or consuming (self)
+		 -- the fact that Rust makes borrowing implicit for method receivers is a big part of making
+		 	ownership ergonomic in practice
+
+
+
+
+Associated Functions
+  - associated functions: functions within impl blocks that don't take self as a paramter
+  - they're still functions, not methods, because they don't have an instance of the struct to work with
+    -- ex. String::from
+
+  - Associated functions are often used for constructors that will return a new instance of the struct
+
+
+
+Multiple impl Blocks
+  - each struct is allowed to have multiple impl blocks
+  - there is no reason to arbitrarily break functions into different impl locks, but we will see a case
+  	later thwere multiple impl blcoks are useful (w/ generic types and traits)

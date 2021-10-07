@@ -1,0 +1,191 @@
+
+Use Keyword
+  - we can bring a path into a scope and then call the items in that path as if they're local items with
+  	the use keyword
+
+  - example:
+
+      use crate::front_of_house::hosting;
+	  // we can now use all of the items from front_of_house::hosting module without having to specify path
+
+
+  - adding 'use' and a path in a scope is similar to creating a symbolic link in the filesystem
+    -- by adding 'use crate::front_of_house::hosting' in the crate root, hosting is now a valid name
+	   in that scope, just as though the hosting module had been defined in the crate root
+	   * paths brought into scope with 'use' also check privacy, like any other paths
+
+  - you can also bring an item into scope with 'use' and a relative path
+
+    example:
+
+      use self::front_of_house::hosting;
+
+
+
+Creating Idiomatic 'use' Paths
+  - when we are bringing functions into scope, it is best to bring in the containing scope and then
+  	specifying the function such as with "hosting::add_to_waitlist()" as this makes clear
+	that add_to_waitlist comes from the hosting module and is not defined locally
+
+  - On the other hand, when bringing in structs, enums, and other items with use, it's idiomatic
+  	to specify the full path
+
+	example:
+
+	  use std::collections::HashMap;
+
+	  fn main() {
+	      let mut map = HashMap::new();
+		  map.insert(1, 2);
+	  }
+
+  - the exception to this idiom is if we're bringing two items with the same name into scope with use
+  	statements, because Rust doesn't allow that
+
+  - example (two types of Result from different modules):
+
+      use std::fmt;
+	  use std::io;
+
+	  fn fucntion1() -> fmt::Result {...}
+
+	  fn function2() -> io::Result<()> {...}
+
+    -- using the parent modules distinguishes the two Result types
+	   * if we'd tried to import both Result types directly, Rust wouldn't know Result we meant when
+	   	 we used Result
+
+
+
+
+Providing New Names with the 'as' Keyword
+  - we can use 'as' to a specify a new local name for a type/module we bring into scope
+
+    example:
+
+	  use std::fmt::Result;
+	  use std::io::Result as IoResult;
+
+	  fn function1() -> Result {...}
+	  fn function2() -> IoResult<()> {...}
+
+
+  - in the second 'use' statement, we chose the new name IoResult for the std::io::Result type, which
+  	won't conflict with the Result from std::fmt that we've also brought into scope
+
+
+Re-exporting Names with 'pub use'
+
+  - when we bring a name into scope with the 'use' keyword, the name available in the new scope
+  	is private
+
+  - to enable the code that calls our code to refer to that name as if it had been defined in that code's
+  	scope, we can combine 'pub' and 'use'
+	-- this technique is called "re-exporting" because we're bringing an item into scope but also making
+	   that item available for others to bring into their scope
+
+
+  - example:
+
+      mod front_of_house {
+	      pub mod hosting {
+		      pub fn add_to_waitlist() {}
+		  }
+	  }
+
+	  pub use crate::front_of_house::hosting;
+
+	  pub fn eat_at_restaurant() {
+	      hosting::add_to_waitlist();
+		  hosting::add_to_waitlist();
+		  hosting::add_to_waitlist();
+	  }
+	  
+
+  - by using 'pub use', external code can now call the add_to_waitlist funciton using hosting::add_to_waitlist.
+  - if we hadn't specified 'pub use', the eat_at_restaurant function could call hosting::add_to_waitlist
+  	in its scope, but external code couldn't take advantage of this new path
+
+  - re-exporting is helpful when the internal structure of your code is different from how programmers
+  	calling your code would think about the domain
+	-- for example in the restaurant example: the people running about the restaurant think about
+	   "front of the house" vs "back of the house", but customers visiting a restaurant probably
+	   won't think about the parts of the restaurant in those terms
+
+    -- with 'pub use', we can write our code with one structure but expose a different structure
+
+	   * doing so makes our library well organized for programmers working on the library and programmers
+	   	 calling the library
+
+
+
+Using External Packages
+  - we download packages for use by adding them to our [dependencies] in Cargo.toml
+  - to bring external package code into scope in our package, we add a 'use' line starting with
+  	the name of the create we wish to use and list the items we want to bring into scope
+
+  - Note: std is also a create that's external to our package, but because std is shipped with the Rust lang,
+  	we don't need to change Cargo.toml to include std. But, we do need to refer to it with 'use' to bring
+	items from there into our package's scope
+
+	-- example:
+	     use std::collections::HashMap;
+
+
+
+Using Nested Paths to Clean Up Large 'use' Lists
+  - If we're using multiple items defined in the same create or same module, listing each item on its own
+  	line can take upa  lot of vertical space in our files
+
+  - instead, we can use nested paths to bring the same items into scope in one line.
+  	we do this by specifying the common part of the path, followed by two colons, and then curly brackets
+	around a list of the parts of the paths that differ
+
+	example:
+		// these non-nested use lines
+		use std::cmp::Ordering;
+		use std::io;
+
+		// are equivalent to this single nested use line
+		use std::{cmp::Ordering, io};
+
+
+
+  - in bigger programs, bringing many items into scope from the same crate or module using nested paths
+  	can reduce the number of separate use statements needed by a lot!
+
+  - we can use a nested path at any level in a path, which is useful when combing two use statements that
+  	share a subpath
+
+    example::
+		// two use lines with common subpath
+		use std::io;
+		use std::io::Write;
+
+		// nesting them together
+		use std::io::{self, Write};
+
+
+
+The Glob Operator
+  - if we want to bring *all* public items defined in a path into scope, we can specify that path followed
+  	by '*', the glob operator:
+
+	  use std::collections::*;
+
+  - this use statement brings all public items defined in std::collections into the current scope
+    -- however, this can make it harder to tell what names are in scope and where a name used in your
+	   program was defined
+
+
+
+	
+
+		    
+  	
+	
+  	
+  	
+	 
+	  	  
+  

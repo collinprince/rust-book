@@ -1,0 +1,3 @@
+
+Using Box<T> to Point to Data on the Heap
+  - the most straightforward smart pointer is a box, whose type is written Box<T> 

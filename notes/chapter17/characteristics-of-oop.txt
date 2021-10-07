@@ -1,0 +1,75 @@
+
+Objects Contain Data and Behavior
+  - from Design Patterns: "Object-oriented programs are made up of objects. An
+  	object packages both data and the procedures that operate on that data.
+	The procedures are typically called methods or operations"
+	-- based on this definition, Rust is OOP
+
+
+Encapsulation that Hidens Implementation Details
+  - Another aspect commonly associated with OOP is the idea of encapsulation
+  - encapsulation: the implementation details of an object aren't
+  	accessible to code using that object
+	-- the only way to interact with an object is through its public API
+	-- code using the object shouldn't be able to reach into the object's
+	   internals and change data or behavior directly
+
+  - based on this requirement of encapsulation, Rust qualifies as OOP too,
+  	since we can create structs with private fields and methods and only
+	expose a subset of pub functions which allow users to use the object
+
+
+Inheritance as a Type System and as Code Sharing
+  - inheritance: mechanism whereby an object can inherit from another object's
+  	definition, thus gaining the parent object's data and behavior without
+	you having to define them again
+
+  - if a language must have inheritance to be an OOP language, then Rust
+  	is not OOP
+	-- there is no way to define a struct that inherits the parent struct's
+	   fields and method implementations
+
+  - however, if you're used to having inheritance in your programming
+  	toolbox, you can use other solutions in Rust
+
+  - You choose inheritance for two main reasons:
+  	1. reuse of code: you can implement particular behavior for one type,
+	   and inheritance enables you to reuse that implementation
+	   for a different type
+
+	   --> You can share Rust code using default trait method implementations
+
+    2. polymorphism: you can substitute multiple objects for each other
+	   at runtime if they share certain characteristics
+	   -- to many people polymorphism is synonymous with inheritance, but
+	   	  it's actually a more general concept that refers to code that can work
+		  with data of multiple types -> for inheritance, those types are
+		  generally subclasses
+
+       -- Rust instead uses generics to abstract over different possible
+	   	  types and trait bounds to impose constraints on what those types
+		  must provide -> this is sometimes called bounded parametric
+		  polymorphism
+
+
+	   -- Inheritance has recently fallen out of favor as a programming design
+	   	  solution in many programming languages
+		  * it's often at risk of sharing more code than necessary
+		    - subclasses shouldn't always share all characteristics of their
+			  parent class but will do so with inheritance
+	        - can make program designs less flexible
+
+  		  * introduces the possibility of calling methods on subclasses
+		  	that don't make sense or that cause errors because the methods
+			don't apply to the subclass
+
+          * some languages will only allow a subclass to inherit from one
+		  	class, further restricting the flexibility of a program's design
+
+  - for these reasons, Rust takes a different approach, using trait objects
+  	instead of inheritance
+	-- trait objects enable polymorphism in Rust
+		  
+		  	
+	   	   
+

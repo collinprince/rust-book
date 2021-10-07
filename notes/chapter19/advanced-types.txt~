@@ -1,0 +1,4 @@
+
+Using the Newtype Pattern for Type Safety and Abstraction
+  - the newtype pattern is useful for statically enforcing that
+  	values are never confused and indicating the units of values

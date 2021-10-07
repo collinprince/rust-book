@@ -1,0 +1,6 @@
+
+Enforcing Borrowing Rules at Runtime with RefCell<T>
+  - Unlike Rc<T>, the RefCell<T> type represents single ownership over the data it holds
+
+  - with references and Box<T>, the borrowing rules' invariants are enforced at compile time
+  - with RefCell<T>, these invariants are enforced at runtime

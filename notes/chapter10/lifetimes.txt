@@ -1,0 +1,113 @@
+
+Validating References with Lifetimes
+  - every reference in Rust has a *lifetime*
+  - lifetime: the scope for which that reference is valid
+    -- most of the time: references are implicit and inferred
+	-- sometimes: we must annotate lifetimes when the lifetimes of references could be related
+	   in a few different ways
+
+  - Rust requires us to annotate the relationships using generic lifetime parameters to ensure the actual
+  	references used at runtime will definitely be valid
+
+  - lifetimes: arguably Rust's most distinctive feature
+
+
+
+Preventing Dangling References with Lifetimes
+  - the main aim of a lifetime is to prevent dangling references, which cause a program to reference
+  	data other than the data it's intended to reference
+
+
+Lifetime Annotation Syntax
+  &i32 	       // a reference
+  &'a i32      // a reference w/ an explicit lifetime
+  &'a mut i32  // a mutable reference w/ an explicit lifetime
+
+
+
+Lifetime Annotations in Function Signatures
+  fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+      if x.len() > y.len() {
+	      x
+	  } else {
+	      y
+	  }
+  }
+
+  - 'a will be the shorter of the two lifetimes of x and y
+  - declaring 'a will not chnage the lifetimes of the arguments passed to x
+  	and y
+
+
+
+Thinking in Terms of Lifetimes
+  - this is legal:
+      fn longest<'a>(x: &'astr, y: &str) -> &'a str {
+	      x
+	  }
+
+  - when returning a reference from a function, the lifetime parameter for the
+  	return type needs to match the lifetime parameter for one of the parameters
+    -- if the reference returned does not refer to one of the parameters,
+  	   it must refer to a value created within this function, which would be
+	   a dangling reference because the value will go out of scope at the end of
+	   the function
+
+
+Lifetime Annotations in Struct Definitions
+  - it's possible for structs to hold references, but in that case we would need
+  	to add a lifetime annotation on every reference in the struct's definition
+
+    -- example:
+	     struct ImportantExcerpt<'a> {
+		     part: &'a str,
+		 }
+
+		 fn main() {
+		     let novel = String::from("Call me Ishmael. Some years ago...");
+			 let first_sentence = novel.split('.').next().expect("Could not find a .");
+			 let i = ImportantExcerpt {
+			     part: first_sentence,
+			 };
+		 }
+
+  - the annottaion on ImportantExcerpt means an instance of ImportantExcerpt can't
+  	outlive the reference it holds in its part field
+
+
+Lifetime Elision
+  - some functions that return references do not require specific lifetime
+  	annotations due to some known compiler rules called the lifetime elision rules
+  - Liftime Elision Rules (1st rule applies to input lifetimes, 2/3 apply to output):
+  	1. each parameter that is a reference get its own lifetime parameter
+	
+	2. if there is exactly one input lifetime parameter, that lifetime is
+	   assigned to all output lifetime parameters: fn foo<'a>(x: &a' i32) -> &a' i32
+
+    3. If there are multiple lifetime parameters, but one of them is &self or
+	   &mut self because this is a method, the lifetime of self is assigned to all
+	   output lifetime parameters
+
+
+
+The Static Lifetime
+  - One special lifetime: 'static
+
+  - 'static means that this reference can live for the entire duration of the
+  	program
+
+  - all string literals have the 'static lifetime:
+  	  let s: &'static str = "I have a static lifetime.";
+
+    -- the text of this string is stored directly in the program's binary,
+	   which is always available -> therefore, the lifetime of all string literals
+	   is 'static
+
+  - 
+ 
+
+
+
+
+
+  	

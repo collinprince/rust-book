@@ -1,0 +1,4 @@
+
+Traits: Defining Shared Behavior
+  - trait: tells Rust Compiler about functionality a particular type has and can share with other types
+    -- we can use trait bounds to specify that a generic type can be any type that has certain behavior

@@ -1,0 +1,152 @@
+
+Generic Data Types In Function Definitions
+  - when defining a function that uses generics, we place the generics in the signature of the function
+  	where we would usually specify the data types of the parametesr and return value
+
+
+  - example:
+  	fn largest<T>(list: &[T]) -> T { ... }
+
+
+In Struct Definitions
+  - we can also define structs to use a generic type parameter in one or more fields using the <> syntax
+
+  - example:
+    struct Point<T> {
+	    x: T,
+		y: T,
+	}
+
+    fn main() {
+	    let integer = Point { x: 5, y: 10 };
+		let float = Point { x: 1.0, y: 4.0 };
+	}
+
+
+  - to define a Point struct where x and y are both generics but could have different types, we can use
+  	multiple generic type paramters.
+
+  - example:
+    struct Point<T, U> {
+	    x: T,
+		y: U,
+	}
+
+	fn main() {
+	    let both_integer = Point { x: 5, y: 10 };
+		let both_float = Point { x: 1.0, y: 4.0 };
+		let integer_and_float = Point { x: 5, y: 4.0 };
+	}
+
+  - you can use as many generic type parameters in a defintion as you want, but using more than a few makes
+  	your code hard to read
+	-- when you need lots of generic types in your code, it could indicate that your code needs restructuring
+	   into smaller pieces
+
+
+
+In Enum Definitions
+  - we can define enums to hold generic data types in their variants
+
+  - example:
+
+    enum Option<T> {
+	    Some(T),
+		None,
+	}
+
+  - enums can use multiple generic types as well:
+
+    enum Result<T, E> {
+	    Ok(T),
+		Err(E),
+	}
+
+    -- the Result enum is generic over two types, T, and E, and has two varaints: Ok, which holds a value of
+	   type T, and Err, which holds a value of type E
+
+
+
+In Method Definitions
+  - we can implement methods on structs and enums and use generic types in their definitions
+
+  - example:
+
+    struct Point<T> {
+	    x: T,
+		y: T,
+	}
+
+    impl<T> Point<T> {
+	    fn x (&self) -> &T {
+		    &self.x
+		}
+	}
+
+	fn main() {
+	    let p = Point { x: 5, y: 10 };
+		println!("p.x = {}", p.x());
+	}
+
+  - note that we have to declare T just after impl so we can use it to specify that we're implementing
+  	methods on the type Point<T>
+	-- by declaring T as a generic type after impl, Rust can identify that the type in the angle brackets
+	   in Point is a generic type rather than a concrete type
+
+  - We could, for example implement methods only on Point<f32> instances rather than on Point<T> instances
+  	with any generic type
+
+	-- below, we implement methods only on Point<f32> instances rather than on Point<T>
+
+       impl Point<f32> {
+	       fn distance_from_origin(&self) -> f32 {
+		       (self.x.powi(2) + self.y.powi(2)).sqrt()
+		   }
+	   }
+
+
+
+  - generic type parameters in a struct definition aren't always the same as those you use in that
+  	struct's method signatures
+
+	-- for example, the mixup function below defines other generic types V & W and takes in as a parameter
+	   another Point of type Point<V, W> --> thus we can take in a point as parameter that may have
+	   different types than the Point that is calling this method
+
+
+      struct Point<T, U> {
+	      x: T,
+		  y: U,
+	  }
+
+	  impl<T, U> Point<T, U> {
+	      fn mixup<V, W>(self, other: Point<V, W>) -> Point<T, W> {
+		      Point {
+			      x: self.x,
+				  y: other.y
+			  }
+		  }
+	  }
+
+	  fn main() {
+	      let p1 = Point { x: 5, y: 10.4 };
+		  let p2 = Point { x: "Hello", y: 'c' };
+		  let p3 = p1.mixup(p2);
+
+		  println!("p3.x = {}, p3.y = {}", p3.x, p3.y);
+	  }
+
+
+
+Performance of Code Using Generics
+  - Rust implements generics using Monomorphization
+
+  - Monomorphization: the process of turning generic code into specific code by filling in the concreate types
+  	that are used when compiled
+
+    -- the compile does the opposite of the steps we used to create the generic functions: the compiler
+	   looks at all the places where generic code is called and generates code for the concreate types
+	   the generic code is called with
+
+  - Since Rust compiles generic code that specifies the type in each instance, we pay no runtime cost for
+  	using generics

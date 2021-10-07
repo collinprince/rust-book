@@ -1,0 +1,86 @@
+
+Snake case
+  - Rust code uses snake case as the conventional style fo rfunction and variable naems
+  - in snake case, all letters are lowercase and underscores separate words
+
+  - example:
+
+      fn main() {
+	  	 println!("Hello, world!");
+
+		 another_function();
+	  }
+
+	  fn another_function() {
+	  	 println!("Another function."):
+	  }
+
+
+  - function definition placement: it does not matter whether a user defined function is placed before
+  	or after where it is called in the file, it will be compiled/called directly regardless
+
+
+Function parameters
+  - parameters are defined in function definitions by providing the name of the parameter and the type
+  	of the parameter
+  - example:
+  	  fn another_function(x: i32) {
+	  	 println!("The value of x is: {}", x);
+	  }
+
+
+
+
+Expression vs Statement
+  - Statement: instructions that perform some action and do not return a value
+  - Expression: evalutate to a resulting value
+  - Statemnts and expressions are treated separately in Rust as compared to C
+    -- in C, (int x = 1) would have a return value of 1 (since this is the assigned value)
+	   and thus we could write the following valid code:
+	     int y = (int x = 1);
+
+    -- in Rust, an assigment statement is a statement and therefore does not have a return value,
+	   so the following code would not compile:
+	     let y = (let x = 1);
+
+    -- function definitions are also statements
+
+  - Examples of expressions are mathematical operations (such as 5 + 6), calling a function, or
+  	calling a macro
+
+  - The block that we use to create new scopes, {}, is an expression. For example:
+  	  let y = {
+	  	  let x = 3;
+		  x + 1
+	  };
+
+    will assign 4 to the value of y since x + 1 will be returned by the scope
+
+
+  - Expressions do not include ending semicolons
+    -- if you do add a semicolon to the end of an expression, you turn it into a statement, which will then
+	   not return a value
+
+
+Functions with Return Values
+  - we don't name return values, but we do declare their type after an arrow ( -> )
+  - in Rust, the return value of the function is synonymous with the value of the final expression
+  	in the block of the body of a function
+	-- you can return early from a function by using the return keyword and specifying a value, but most
+	   most functions return the last expression implicitly.
+
+
+  - example:
+  	fn five() -> i32 {
+	  5 
+	}
+
+	fn main() {
+	  let x = five();
+	  println!("The value of x is: {}", x); // prints 5
+	}
+
+
+  - in the example above, there are no function calls, macros, or even let statements in the five function,
+  	it is just the number 5 by itself. This is a perfectly valid function in Rust
+

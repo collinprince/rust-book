@@ -1,0 +1,22 @@
+
+panic! macro
+  - used when we have an unrecoverable error and want to shut down our program
+  - when panic! executes, your program will print a failure message, unwind and clean up the stack, and then
+  	quit
+
+  - unwinding vs abort
+    -- unwinding: upon panic!, the program will work its way through the stack and free all of the data
+	   			  that has been allocated the program
+	-- abort: upon panic!, the program will immediately exit and leave any cleanup to the OS to handle
+
+
+  - panic!(msg) prints the error message msg, and reports the filename/line/char where the panic occurred
+
+
+Using a panic! Backtrace
+  - RUST_BACKTRACE flag
+    -- when we run "$ cargo run" we can instead run "$ RUST_BACKTRACE=1 cargo run" which will cause
+	   panic! to print a backtrace of all system calls when the program panicked
+
+
+

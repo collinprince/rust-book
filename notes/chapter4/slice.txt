@@ -1,0 +1,70 @@
+
+Slice Type
+  - a data type that does not have ownership
+  - slices let you reference a contiguous sequence of elements in a collection rather than the whole collection
+
+
+String Slices
+  - string slice: a reference to part of a String
+  - example:
+  	  let s = String::from("hello world");
+
+	  let hello = &s[0..5];
+	  let world = &s[6..11];
+
+  - this is similar to taking a reference to the whole String but with the extra [0..5] bit. Rather
+  	than a reference to the entire String, it's a reference to a portion of the String
+
+
+  - Syntax: [starting_index..ending_index]
+  	-- starting_index: first position in the slice
+	-- ending_index: one more than the last position in the slice
+
+  - the starting_index can be omitted (infers 0/start of word)
+  - the ending_index can be omitted (infers end of word)
+    -- these both follow the Rust .. range syntax
+  - you can drop both values to take a slice of the entire string
+
+  - string slice range indices must occur at valid UTF-8 character boundaries
+  	-- if you attempt to create a string slice in the middle of a multibyte character, the program will
+	   exit with an error
+	   --- for now, we assume only ASCII
+
+
+  - the type of a string slice is "&str"
+
+  - unlike in an implementation where we return the index where the first word ends, by returning the
+  	string slice if we try to access the slice after the string has been cleared or otherwise
+	modified in such a way that our reference would return garbage, we will get a compile time error
+	-- this is due to borrowing rules: if we have an immutable reference to something, we cannot also
+	   take a mutable reference
+	   * because clear needs to truncate the String, it needs to get a mutable reference.
+	   	 Rust disallows this causing compilation to fail
+
+
+String Literals are Slices
+  - Example: let s = "Hello, world!"; --> the type of s is &str
+  - All string literals are treated as string slices
+  - This is also why string literals are immutable, since &str (string slice) is immutable
+
+
+
+String Slices as Parameters
+  - For portability, it is better to use '&str' as a parameter and not '&String'
+    -- if we have a string slice, we can pass that directly
+	-- if we have a string, we can pass a slice of the entire String
+	-- defining a function to take a string slice instead of a reference to a String makes
+	   our API more general and useful without losing any functionality
+
+
+Other Slices
+  - there is a more general form of slice, which we can consider with any primitive array
+    example:
+		let a = [1, 2, 3, 4, 5];
+		let slice = &a[1..3];
+		assert_eq!(slice, &[2, 3]);
+
+  - this slice has the type &[i32]
+  - it works the same way as string slices do, by storing a refernce to the first element and a length
+
+

@@ -1,0 +1,98 @@
+
+match Control Flow Operator
+  - match: allows you to compare a value against a series of patterns and then execute code based
+  	on which pattern matches
+	-- patterns can be made up of literal values, variable names, wildcards, and many other things
+	-- values go through each pattern in a match, and at teh first pattern the value "fits",
+	   the value falls into the associated code block to be used during execution
+
+
+Match syntax
+
+  - first we list the 'match' keyword followed by an expression
+    -- this is very similar to if, but with one distinct difference: with if
+	   the expression must evaluate to a Boolean value, while the expression
+	   here can be any type
+
+  - Next are the match arms:
+    -- an arm has two parts: a pattern and some code
+	   * the first arm for our example has a pattern that is the value "Coin::Penny" and then the "=>" op
+	   	 that separates the pattern and the code to run
+		 -- the code in this case is just the value 1
+		 
+    -- each arm is separated from the next with a comma
+
+  - When the match expresion executes, it compares the resulting value against the pattern of each arm,
+  	in order. If a pattern matches the value, the code associated with that pattern is executed.
+	If the pattern doesn't match the value, execution continues to the next arm
+	-- we can have as many arms as we need
+    -- the code associated with each arm is an expression, and the resulting value of the expression
+	   in the matching arm is the value that gets returned for the entire match expression
+
+
+  - if you want to run multiple lines of code in a match arm, you can use curly brackets
+  	example:
+
+      fn value_in_cents(coin: Coin) -> u8 {
+	      match coin {
+		      Coin::Penny => {
+			      println!("Lucky penny!");
+				  1
+			  }
+			  Coin::Nickel => 5,
+			  Coin::Dime => 10,
+			  Coin::Quarter => 25,
+		  }
+	  }
+
+
+Patterns that Bind to Values
+  - match arms can bind to the parts of the values that match the pattern
+    -- this is how we can extract values out of enum variants
+
+
+
+Matching wtih Option<T>
+  - We can also handle Option<T> using match as we did with the Coin enum
+
+  - example: writing a function that takes an Option<i32> and, if there's a value inside, adds 1 to that value.
+  	If there isn't a value inside, the function should return the None value and not attemp to perform
+	any operations.
+
+ 	code:
+	    fn plus_one(x: Option<i32>) -> Option<i32> {
+		    match x {
+			    None => None,
+				Some(i) => Some(i + 1),
+			}
+		}
+
+
+  - combining 'match' and enums is useful in many situtations. This patterns come up a lot in Rust code:
+  	match against an enum, bind a variable to the data inside, and then execute code based on it.
+
+
+
+Matches Are Exhaustive
+  - Matches in Rust are *exhaustive*: we must exhaust every last possibility in order for the code to be
+  	valid.
+	-- Especially in the case of Option<T>, when Rust prevents us from forgetting to explicitly handle
+	   the None case, it protects us from assuming that we have a value when we might have null,
+	   thus making the billion-dollar mistake discussed earlier impossible
+
+
+
+
+The _ Placeholder
+  - Rust also has a pttern we can use when we don't want to list all possible values: _
+
+  - _ will match any value
+  
+  - By putting _ after our other arms, the _ will match all the possible cases that aren't specified
+  	before it.
+	-- The () is just the unit value, so nothing will happen in the _ case from Rust book example
+
+  - The match expression can be a bit wordy in a situation in which we care about only *one* of
+  	the cases --> for this situation, Rust provides "if let"
+  
+  	

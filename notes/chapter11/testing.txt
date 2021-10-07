@@ -1,0 +1,107 @@
+
+Unit Tests
+  - it is standard convention in Rust to include unit tests in the same file that the functions/code
+  	is defined
+
+  - we create a module named tests and annotate it with #[cfg(test)]
+
+  - example:
+
+    #[cfg(test)]
+  	mod tests {
+	    #[test]
+		fn it_works() {
+		    assert_eq!(2 + 2, 4);
+		}
+	}
+
+  - the attribute "cfg" standards for configuration and tells Rust that the following tiem
+  	should only be included given a certain configuration option
+
+  - By using the cfg attribute, Cargo compiles our test code only if we actively run the tests with
+  	"cargo test"
+  	-- this includes any helper functions that might be within this module, in addition to the functions
+	   annotated with #[test]
+
+
+
+Testing Private Functions
+  - testing private functions is a matter of debate, as some programmers believe private functions
+  	and others do not
+	
+  - Rust's privacy rules allow us to test private functions (which can be a problem in other langs)
+    -- since a module can use all of the functions defined in its ancestors, the tests module can import
+	   all of its ancestors functions (using "use super::*;"), which will also bring private functions
+	   into scope which we can then test
+
+
+
+
+
+Integration Tests
+  - integration tests are entirely external to your library
+    -- they use your library in the same way any other code would, which means they can only call functions
+	   that are part of your library's public API
+
+  - their purpose is to test whether many parts of your library work together correctly
+
+  - to create integration tests, you first need a "tests" directory
+
+
+The tests Directory
+  - We create a tets directory at the top level of our project directory, next to src
+
+  - Cargo knows to look for integration test files in this directory
+
+  - we can then make as many test files as we want in this directory, and Cargo will compile each of the
+  	files as an individual crate
+
+  	
+
+
+Submodules in Integration Tests
+  - As you add more integration tests, you might want to make more than one file in the tests directory to
+  	help organize them
+	-- for example, you can group the test functions by the functionality they're testing
+
+
+  - each file in the tests directory is compiled as its own separate crate
+
+  - treating each integration test file as its own crate is useful to create separate scopes that are
+  	more like the way end users will be using your crate
+	-- however, this means files in the tests directory don't share the same behavior as files in src do
+
+
+  - If we want to create a module of common helper functions for tests, we must create a file to hold
+  	these functions, but we don't want this file to be treated as a testable crate as the rest of our
+	integration tests are
+
+
+  - to avoid our common file from being treated as a separate crate to be tested, we create a new directory/file
+  	"tests/common/mod.rs"
+	-- naming the file this way tells Rust not to reat the common module as an integration test file
+
+
+  - files in the subdirectories of the tests directory don't get compiled as separate crates or have
+  	sections in the test output
+
+    -- after we've created tests/common/mod.rs, we can use it from any of the integration
+	   test files as a module
+
+
+
+Integration Tests for Binary Crates
+  - If our project is a binary crate that only contains a src/main.rs file and doesn't have a src/lib.rs file,
+  	we can't create integration tests in the tests directory and bring functions defined in the src/main.rs
+	file into scope with a use statement
+	-- only library crates expose functions that other crates can use; binary crates are meant to be run
+	   on their own
+
+  - this is one of the reasons Rust projects that provide a binary have a straightforward src/main.rs
+  	file that calls logic that lives in the src/lib.rs file
+	-- using this structure, integration tests can test the library create with use to make the
+	   important functionality available
+	-- if the important functionality works, the small amount of code in the src/main.rs file will work
+	   as well, and that small amount of code doesn't need to be tested
+
+

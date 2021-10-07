@@ -1,0 +1,5 @@
+
+To panic! or Not to panic!
+  - it is a good default to return a Result rather than to panic
+    -- allows calling code to choose to panic or not and leaves the handling up to the caller as well
+	

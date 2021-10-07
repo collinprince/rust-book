@@ -1,0 +1,40 @@
+
+Cargo -> Rust's build system and package manager
+  - handles building, downloading libs, building libs
+
+Creating a project with cargo
+  $ cargo new hello_cargo
+  $ cd hello_cargo
+
+
+  Cargo automatically creates a cargo.toml file, a src directory,
+  a file main.rs in src, and initializes a git repo for the project
+  if one does not already exist
+
+
+Cargo.toml
+  - TOML: Tom's Obvious, Minimal Language format -> Cargo's config format
+  - [package] -> defines name, version, author, edition
+  - [dependencies] -> where you add deps for the project AKA crates
+
+Cargo commands
+  $ cargo build
+  	-> builds binary of project, stores it in target/debug dir
+	
+  $ cargo run
+    -> builds binary and runs it
+	   -- if src code unchanged since last build, no building will take
+	   	  place and cargo will just run the binary
+		  
+  $ cargo check
+    -> checks your code to make sure it compiles but doesn't produce an exec
+	   -- cargo check is often much faster than cargo build
+	   -- helpful when building a project to save time to make sure
+	   	  code will build but don't need to take all of the time of building
+
+  $ cargo build --release
+    -> build for release w/ optimizations, creates exec in target/release
+  
+
+
+

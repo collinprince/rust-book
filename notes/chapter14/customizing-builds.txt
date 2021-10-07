@@ -1,0 +1,32 @@
+
+Customizing Builds with Release Profiles
+  - release profiles are predefined and customizable profiles with different configurations that allow
+  	a programmer to have more control over various options for compiling code
+
+  - each profile is configured independently of the others
+  
+
+  - Cargo has two main profiles:
+    -- dev: profile Cargo uses when you run 'cargo build'
+	-- release: profile Cargo uses when you run 'cargo build --release'
+
+  - the dev profile is defined with good defaults for development, and the release profile
+  	has good defaults for release builds
+
+
+  - Cargo has default settings for each of the profiles that apply when there aren't any [profile.*]
+  	sections in the project's Cargo.toml file
+
+  - in Cargo.toml, the following default profiles exist (code):
+
+      [profile.dev]
+	  opt-level = 0
+
+	  [profile.release]
+	  opt-level = 3
+
+  - opt-level: the number of optimizations Rust will apply to your code, with a range of 0 to 3
+    -- the higher the optimization, the longer the code will take to compile generally
+
+  - you can override any default setting by addin ga different value for it in Cargo.toml
+    -- for example, we can update our dev profile to have opt-level = 1

@@ -1,0 +1,72 @@
+
+Creating a Workspace
+  - workspace: a set of packages that share the same Cargo.lock and output directory
+
+  - the workspace has one target directory at the top level for the compiled artifacts to be
+  	placed into
+    -- a package in the workspace does not have its own target directory
+
+  - Cargo structures the target directory in a workspace like this because the crates
+  	in a workspace are meant to depend on each other
+	-- if each crate had its own target directory, each crate would have to recompile each of the
+	   other crates in the workspace to have the artifacts in its own target directory
+
+    -- by sharing one target directory, the crates can avoid unnecessary rebuilding
+
+
+  - to use one package (p1) in the workspace within another package (p2) in the workspace, we must add
+  	p1 to the dependencies of p2
+
+  - we can then build the entire workspace by calling 'cargo build' in the top-level directory
+  	and then we can specify which of the packages we wish to run by running the command
+	  $ cargo run -p <package-name>
+
+
+
+Depending on an External Package in a Workspace
+  - the workspace has only one Cargo.lock file at the top level of the workspace rather than having
+  	a Cargo.lcok file in each crate's directory
+	-- this ensures that all crates are using the same version of all dependencies
+
+
+  - if we add the rand package to the adder/Cargo.toml and add-one/Cargo.toml files,
+  	Cargo will resolve both of those to one version of rand and record that in the one Cargo.lock
+
+  - making all crates in the workspace use the same dependencies means the crates in the workspace
+  	will always be compatible with each other
+
+  - if we bring in one package such as rand into a package in the workspace, we can't use
+  	it in other crates in the workspace unless we add rand to their Cargo.toml files as well
+	-- we can fix this by adding rand as a dependency to the other crate we wish to use it
+	   with, which will cause cargo to add rand as a dependency for that package in Cargo.lock,
+	   but no additional copies of rand will be downloaded since we already downloaded a copy
+	   for the workspace for the original package that was using rand
+
+
+
+Adding a Test to a Workspace
+  - if we have tests in one of the crates within a workspace, when we run 'cargo test' Cargo will check
+  	for tests in each of our crates within the workspace and report the results for all of them
+
+  - we can also run tests for one particular crate in a workspace from the top-level directory by using
+  	the -p flag and specifying the name of the crate we want to test:
+	  $ cargo test -p add-one
+
+
+  - if you publish the crates in the workspace to crates.io, each crate in the workspace will need to
+  	be published separately
+	-- the 'cargo publish' command does not have an --all flag or a -p flag, so
+	   you must change to each crate's direcotry and run 'cargo publish' on each crate in the
+	   workspace to publish the crates
+
+
+
+Summary
+  - as your project grows, consider using a workspace: it's easier to understand smaller,
+  	individual components rather than one big blog of code
+
+  - furthermore, keeping the crates in a workspace can make coordination between
+  	them easier if they are often changed at the same time
+   
+  	
+

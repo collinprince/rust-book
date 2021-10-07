@@ -1,0 +1,12 @@
+
+Collections
+  - Rust's standard library contains useful data structures called collections
+
+  - Three collections that are used very often in Rust programs:
+  	1. vector: allows you to store a variable number of values next to each other
+	2. string: a collection of characters
+	3. hash map: allows you to associate a value with a particular key
+
+
+
+

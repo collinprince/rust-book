@@ -1,0 +1,7 @@
+
+Customizing Builds with Release Profiles
+  - release profiles are predefined and customizable profiles with different configurations that allow
+  	a programmer to have more control over various options for compiling code
+
+  - each profile is configured independently of the others
+  

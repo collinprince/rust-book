@@ -1,0 +1,43 @@
+
+Crate Defns
+  - crate: a binary or library
+  - crate root: a source file that the Rust compiler starts from and makes up the root module of your crate
+  - package: one or more crates that provide a set of functionality
+    -- contains a Cargo.toml file that describes how to build those crates
+
+
+Package
+  - a package must contain zero or one library crates, and no more
+  - a package can contain as many binary crates as you'd like, but it must contain at least one create
+  	(either library or binary)
+
+
+$ cargo new
+  - Cargo creates a Cargo.toml file, giving us a package
+     -- there is no mention of src/main.rs because Cargo follows a convention that src/main.rs is the crate
+	 	root of a binary crate with the same name as the package
+	 -- likewise, Cargo knows that if the package directory contains src/lib.rs, the package contains
+	 	a library crate with the same name as the package, and src/lib.rs is its crate root
+		  * Cargo passes the crate root files to rustc to build the library or binary
+
+  - here, we have a package that only contains src/main.rs, meaning it only contains a binary crate named
+  	my-project (or whatever you named your package)
+
+  - if a package cotnains src/main.rs and src/lib.rs, it has two crates: a library and a binary, both
+  	with the same name as the package
+	-- a package can have multiple binary crates by placing files in the src/bin directory: each file will
+	   be a separate binary crate
+
+
+  - a crate will group related functionality together in a scope so the functionality is easy to share
+  	between multiple projects
+
+  - keeping a crate's functionality in its own scope clarifies whether particular functionality is defined
+  	in our crate or the rand crate adn prevents potential conflicts.
+	-- i.e. rand defines a Rng trait, but we can define our own Rng struct, and the difference will
+	   be that when our package sees 'Rng' it will be our Rng struct, and when it sees 'rand::Rng' it
+	   will be rand's trait
+
+  - 
+	
+

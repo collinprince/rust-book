@@ -1,0 +1,13 @@
+
+When our logic in main.rs starts to get complicated:
+  - split your program into a main.rs and a lib.rs and move your program's logic to lib.rs
+  - as long as your command line parsing logic is small, it can remain in main.rs
+  - when the command line parsing logic starts getting complicated, extract it from main.rs and
+  	move it to lib.rs
+
+
+Responsibilities of main:
+  - calling the command line parsing logic with the argument values
+  - setting up any other configuration
+  - calling a run function in lib.rs
+  - handling the error if run returns an error

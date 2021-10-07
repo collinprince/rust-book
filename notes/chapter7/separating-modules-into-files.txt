@@ -1,0 +1,36 @@
+
+Breaking Modules into Different Files
+  - when modules get large, you might want to move their definitions to a separate file to make the code
+  	easier to navigate
+
+
+
+Moving front_of_house module to its own file
+
+  - we can create a new file for front_of_house module --> src/front_of_house.rs
+  - we do this by changing the crate root file so it has a forward declaration of "mod front_of_house;"
+  	and then declares a "pub use" for the code we wish to export from front_of_house
+
+  - by putting a semicolon after "mod front_of_house;" in src/lib.rs rather than using a block,
+  	this tells Rust to load the contents of the module from another file with the same name as the module
+
+  - we can further extract hosting into its own module within a front_of_house module dir
+    -- we create a src/front_of_house directory
+	-- we only declare "pub mod hosting;" in src/front_of_house.rs
+	-- we only write "pub fn add_to_waitlist() {}" in src/front_of_house/hosting.rs
+
+  - this is all we have to do in order to break up these modules, and the rest is handled by Rust.
+  	We don't even have to change our original "pub use crate::front_of_house::hosting" statement in
+	src/lib.rs
+
+
+*******
+  - The mod keyword declares modules, and Rust looks in a file with the same name as the module for the code  
+  	that goes into that module
+*******
+
+
+
+
+  	
+

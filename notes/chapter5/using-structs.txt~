@@ -1,0 +1,5 @@
+
+Printing the Contents of a Struct
+  - Rust can print the contents of a struct, but we must opt into the default Display trait for debugging
+    -- in our println! macro call, instead of putting "{}", we must put "{:?}"
+	-- before our struct defn, we must write "#[derive(Debug)]"

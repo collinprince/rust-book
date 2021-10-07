@@ -1,0 +1,165 @@
+
+Patterns and Matching
+  - special syntax in Rust for matching against the structure of types, both complex
+  	and simple
+
+  - a pattern consists of some combination of the following:
+  	- literals
+	- destructured arrays, enums, structs, or tuples
+	- variables
+	- wildcards
+	- placeholders
+
+
+
+'match' Arms
+  - we use patterns in the arms of 'match' expressions
+  - 'match' expressions are defined as the keyword 'match', a value to match on,
+  	and one or more match arms that consist of a pattern and an expression to run
+	if the value matches that arm's pattern, like this:
+
+	match VALUE {
+	    PATTERN => EXPRESSION,
+		PATTERN => EXPRESSION,
+		PATTERN => EXPRESSION,
+	}
+
+  - match expressions need to be exhaustive in the sense that all possibilities
+  	for the value in the match expression must be accounted for
+    -- one way to ensure you've covered every possibility is to have a catchall
+	   pattern for the last arm: for example, a variable name matching any value
+	   can never fail and thus covers every remaining case
+
+
+  - a particular pattern '_' will match anything but never binds to a variable, so
+  	it's often used in the last match arm
+	- the _ pattern can be useful when you want to ignore any value not
+	  specified
+
+
+Condition 'if let' Expressions
+  - if let: mainly a shorter way to write the equivalent of a match that matches
+  	only one case
+
+  - optionally, if let can have a corresponding else containing code to run
+  	if the pattern in the 'if let' doesn't match
+
+  - we can also mix and match 'if let', 'else if', and 'else if let' expressions
+    -- gives us more flexibility than a match expression expression in which
+	   we can express only one value to compare with the patterns
+	-- the conditions in a series of 'if let', 'else if', and 'else if let'
+	   arms aren't required to relate to each other
+
+  - example of mixing and match conditions:
+
+      fn main() {
+	      let favorite_color: Option<&str> = None;
+		  let is_tuesday = false;
+		  let age: Result<u8, _> = "34".parse();
+
+		  if let Some(color) = favorite_color {
+		      println!("Using your favorite color, {}, as the background", color);
+		  }	 else if is_tuesday {
+		      println!("Tuesday is green day!");
+		  } else if let Ok(age) = age {
+		      if age > 30 {
+			      println!("Using purple as the background color");
+			  } else {
+			      println!("Using orange as the background color");
+			  }
+		  } else {
+		      println!("Using blue as the background color");
+		  }
+	  }
+
+  - 'if let' can also introduce shadowed variables in the same way that match
+  	arms can: the line 'if let Ok(age) = age' introduces a new shadowed age variable
+	that contains the value inside the Ok variant
+	-- this means we need to place the 'if age > 30' condition within that block:
+	   we can't combine these two conditions into 'if let Ok(age) = age && age > 30'
+	-- the shadowed age we want to compare to 30 isn't valid until the new scope
+	   starts with the curly bracket
+
+
+  - the downside of using 'if let' expressions is that the complier doesn't check
+  	exhaustiveness, whereas with match expressions it does
+	-- if we omitted the last else block and therefore missed handling some cases,
+	   the compiler would not alert us to the possible logic bug
+
+
+'while let' Conditional Loops
+  - 'while let': allows a while loop to run for as long as a pattern continues to
+  	match
+
+
+  - example:
+
+      let mut stack = Vec::new();
+
+	  stack.push(1); stack.push(2); stack.push(3);
+	  while let Some(top) = stack.pop() {
+	      println!("{}", top);
+	  }
+
+
+
+'for' Loops
+  - in a 'for' loop, the pattern is the value that directly follows the keyword
+  	'for', so in 'for x in y', the x is the pattern
+
+
+  - example:
+
+      let v = vec!['a', 'b', 'c'];
+	  for (index, value) in v.iter().enumerate() {
+	      println!("{} is at index {}", value, index);
+	  }
+
+    -- we use the enumerate method to adapt an iterator to produce a value
+	   and that value's index in the iterator, placed into a tuple
+	   * the first value produced is the tuple `(0, 'a')`
+	   * when this value is matched to the pattern `(index, value)`, index
+	   	 will be 0 and value will be 'a'
+
+
+`let` Statements
+  - let statements themselves are patterns of the form:
+  	let PATTERN = EXPRESSION;
+
+  - the compiler attempts to match the given pattern to the expression,
+  	which is what allows a destructuring pattern such as
+	`let (x, y, z) = (1, 2, 3);` to work
+	-- Rust compares the value `(1, 2, 3)` to the pattern `(x, y, z)`
+
+  - if the number of elements in the apttern doesn't match the number of elements
+  	in the tuple, the overall type won't match and we'll get a compiler error
+	-- example: `let (x, y) = (1, 2, 3);` will throw a compiler error
+
+  - if we wanted to ignore one or more values, we couse use `_` or `..`
+    -- if the problem is that we have too many variables in the pattern, the
+	   solution is to make the types amtch by removing variables so the number
+	   of variables equals the number of elements in the tuple
+
+
+Function Parameters
+  - function parameters can also be patterns
+    -- the parameter declarations in the function signature are patterns
+
+  - as we did with `let`, we could match a tuple in a function's arguments
+  	to the pattern
+
+  - example:
+
+      fn print_coordinates(&(x, y): &(i32, i32)) {
+	      println!("Current location: ({}, {})", x, y);
+	  }
+
+	  fn main() {
+	      let point = (3, 5);
+		  print_coordinates(&point);
+	  }
+
+
+  - we can also use patterns in closure parameter lists in the same way as
+  	in function parameter lists, because closures are similar to functions
+	   

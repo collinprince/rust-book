@@ -1,0 +1,3 @@
+Closures: Anonymous Functions that Can Capture Their Environment
+  - unlike functions, closures can capture values from the scope in which they're
+  	defined

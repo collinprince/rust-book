@@ -1,0 +1,199 @@
+
+Traits: Defining Shared Behavior
+  - trait: tells Rust Compiler about functionality a particular type has and can share with other types
+    -- we can use trait bounds to specify that a generic type can be any type that has certain behavior
+	-- Note: traits are similar to a feature often called interfaces in other languages, although
+	   with some differences
+
+
+Defining a Trait
+  - Different types share the same behavior if we can call the same methods on all of those types
+    -- For instance: news articles & tweets. we want to be able to have those implemented as different types,
+  	   but then we want to be able to call the same methods to summarize the data those types contain
+	   define a trait for this case:
+	   
+	     pub trait Summary {
+		     fn summarize(&self) -> String;
+		 }
+
+  - this trait outlines the interface that a type implementing this trait must have -- in this instance,
+  	all types which implement the Summary trait must implement this summarize function with the
+	given signature
+
+  - a trait can have multiple methods in its body: the method signatures are listed one per line and each
+  	line ends in a semicolon
+
+
+Implementing a Trait on a Type
+  - we can define types which implement our Summary trait:
+
+  	  pub struct NewsArticle {
+	      pub headline: String
+		  pub location: String,
+		  pub author: String,
+		  pub content: String,
+	  }
+
+	  impl Summary for NewsArticle {
+	      fn summarize(&self) -> String {
+		      format!("{}, by {} ({})", self.headline, self.author, self.location)
+		  }
+	  }
+
+
+	  pub struct Tweet {
+	      pub username: String,
+		  pub content: String,
+		  pub reply: bool,
+		  pub retweet: bool,
+	  }
+
+	  impl Summary for Tweet {
+	      fn summarize(&self) -> String {
+		      format!("{}: {}", self.username, self.content)
+		  }
+	  }
+
+
+  - we can now use the methods which we defined based on the Summary trait:
+
+      let tweet = Tweet {
+	      username: String::from("horse_ebooks"),
+		  content: String::from(
+		      "of course, as you probably already know, people",
+		  ),
+		  reply: false,
+		  retweet: false,
+	  };
+
+	  println!("1 new tweet: {}", tweet.summarize());
+
+  - One restriction to note with trait implementations: we can implement a trait on a type only if either the
+  	trait or the type is local to our crate
+	-- for example: we can implement standard library traits like Display on a custom type like Tweet as part
+	   of our aggregator crate functionality, because the type Tweet is local to our aggregator crate
+	-- we can also implement Summary on Vec<T> in our aggregator crate, because the trait Summary is local
+	   to our aggregator crate
+
+
+  - BUT: we can't implement external traits on external types
+    -- we can't implement Display trait on Vec<T> within our aggregator crate, because Display and Vec<T>
+	   are defined in the standard library and aren't local to our aggregator crate
+
+
+  - This restriction is part of a property of programs called coherence, and more specifically the orphan rule,
+  	so named because the parent type is not present
+	-- this rule ensures that other people's code can't break your code and vice versa
+	-- without the rule, two crates could implement the same trait for the same type, and Rust wouldn't know
+	   which implementation to use
+
+
+
+
+Default Implementations
+  - we can define default implementations for a trait which can then be overridden when implementing that trait
+    example:
+
+	  pub trait Summary {
+	      fn summarize(&self) -> String {
+		      String::from("(Read more...)")
+		  }
+	  }
+
+
+  - to use a default implementation to summarize instances of NewsArticle instead of defining a custom
+  	implementation, we specify an empty "impl" block with "impl Summary for NewsArticle {}"
+
+    -- even though we're no longer defining the summarize method on NewsArticle directly, we've provided a
+	   default implementation and specified that NewsArticle implements the Summary trait
+	-- as a result, we can still call the summarize method on an instance of NewsArticle
+
+
+  - creating a default implementation doesn't require us to change any old code that provides
+  	its own implementations of the Summary trait: the syntax for override a default implementation is the
+	same as the syntax for implementing a trait method that doesn't have a default implementation
+
+
+
+  - Default implementations can call other methods in the same trait, even if those other methods
+  	don't have default implementations -> allows us to define a lot of useful functionality
+	and only require implementors to specify a small part of it
+    example:
+	    pub trait Summary {
+		    fn summarize_author(&self) -> String;
+
+			fn summarize(&self) -> String {
+			    format!("(Read more from {}...)", self.summarize_author())
+			}
+		}
+
+		// to use this version of Summary, we only need to define summarize_author when we implement the trait:
+		impl Summary for Tweet {
+		    fn summarize_author(&self) -> String {
+			    format!"(@{}", self.username)
+			}
+		}
+
+		// now we call summarize on Tweet values and it will work correctly
+
+  - Note that it isn't possible to call the default implementation from an overriding implementation of that
+  	same method
+
+
+
+Traits as Parameters
+  - We can define a notify function that calls the summarize method on its item parameter,
+  	which is of some type that implements the Summary trait. To do this, we can use the
+	impl Trait syntax, like this:
+
+	    pub fn notify(item: &impl Summary) {
+		    println!("Breaking news! {}", item.summarize());
+		}
+
+    -- instead of a concreate type for the item parameter, we specify the impl keyword and the trait
+	   name. This parameter accepts any type that implements the specified trait. In the body of notify,
+	   we can call any methods on item that come from the Summary trait, such as summarize
+    -- we can call notify and pass in any instance of NewsArticle or Tweet
+
+
+
+
+Clearer Trait Bounds with where Clauses
+  - to avoid having extremely long function signatures, we can specify the trait bounds of parameters
+  	using where Clauses after the parameter list
+
+
+Returning Types that Implement Traits
+  - We can also use the "impl Trait" syntax in the return position to return a value of some type that
+  	implements a trait
+
+  - the ability to specify that a return type implements a certain trait and is not a concrete type
+  	is especially useful in the context of closures and iterators
+	-- closures and iterators create types that only the compiler knows or types that are very long to
+	   specify
+	-- the "impl Trait" syntax lets you concisely specify that a function returns some type that implements
+	   the Iterator trait without needing to write out a very long type
+
+
+  - however, you can only use the impl Trait if you're returning a single type
+    -- for example, if you try to make a function with the return type "impl Summary"
+	   and then it returns either NewsArticle or Tweet types, this will not compile
+
+
+
+Using Trait Bounds to Conditionally Implement Methods
+  - by using a trait bound with an impl block that uses generic type parameters, we can implement methods
+  	conditionally for types that implement the specified traits
+
+
+  - We can also conditionally implement a trait for any type that implements another trait
+  - Implementations of a trait on any type that satisifes the trait bounds are called blanket
+  	implementations and are extensively used in the Rust standard library
+	
+
+	   		 
+
+   
+	
+
+ 

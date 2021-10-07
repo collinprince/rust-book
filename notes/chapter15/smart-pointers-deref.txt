@@ -1,0 +1,183 @@
+
+Treating Smart Pointers Like Regular References with the Deref Trait
+  - implementing the Deref trait allows you to customize the behavior of the
+  	dereference operator, *
+
+  - by implementing Deref in such a way that a smart pointer can be treated like
+  	a regular reference, you can write code that operates on references and
+	use that code with smart pointers too
+
+
+
+Using Box<T> Like a Reference
+
+  - when using a reference, we can write the following code (where y is set
+  	equal to a reference to x):
+	
+	  fn main() {
+	      let x = 5;
+		  let y = &x;
+
+		  assert_eq!(5, x);
+		  assert_eq!(5, *y);
+	  }
+
+  - we can use Box<T> in a similar fashion with the deref operator:
+
+      fn main() {
+	      let x = 5;
+		  let y = Box::new(x);
+
+		  assert_eq!(5, x);
+		  assert_eq!(5, *y);
+	  }
+
+  - the only diff in the two code examples is that in the first y is a reference
+  	pointing to the value of x, whereas in the second y is an instance of
+	a box pointing to a copied value of x
+
+
+Defining Our Own Smart Pointer
+  - we will build a smart pointer similar to Box<T> type provided by the standard
+  	library to experience how smart pointers behave differently from references
+	by default
+
+
+Treating a Type Like a Refernce by Implementing the Deref Trait
+
+  - the Deref trait, provided by the Standard library, requires us to implement
+  	one method named deref that borrows self and returns a reference to the
+	inner data
+
+  - example for MyBox<T> below:
+
+      use std::ops::Deref;
+
+	  impl<T> Deref for MyBox<T> {
+	      type Target = T;
+
+		  fn deref(&self) -> &Self::Target {
+		      &self.0
+		  }
+	  }
+
+  - the 'type Target = T;' syntax defines an associated type for the Deref
+  	trait to use
+
+  - we fill in the body of derf with &self.0 (returning a ref to the first/only
+  	element in our tuple MyBox obejct)
+
+  - after implementing the Deref trait, we can use the * operator
+
+  - the 'deref' method gives the compiler the ability to take a value of
+  	any type that implements Deref and call the 'deref' method to get a &
+	reference that it knows to dereference
+
+
+  - when we entered *y in the above code, behind the scenes Rust actually
+  	ran this code:
+
+	  *(y.deref())
+
+  - Rust substitutes the * operator with a call to the deref method and then
+  	a plain dereference so we don't have to think about whether or not we need
+	to call the deref method
+
+
+  - the reason the deref method returns a reference to a value, and that the
+  	plain dereference outside the parentheses in *(y.deref()) is still
+	necessary, is the ownership system
+	-- if the deref method returned the value directly instead of a reference
+	   to the value, the value would be moved out of self
+	   
+	-- we don't want to take ownership of the inner value inside MyBox<T>
+	   in this case or in most cases where we use the dereference operator
+
+
+Implicit Deref Coercions with Functions and Methods
+  - Deref coercion is a convenience that Rust performs on arguments to functions
+  	and methods
+
+  - Deref coercion works only on types that implement the Deref trait
+    -- deref coercion converts such a type into a reference to another type
+	-- example: deref coercion can convert &String to &str
+	   because String implements the Deref trait such that it returns &str
+
+
+  - Deref coercion happens automatically when we pass a reference to a particular
+  	type's value as an argument to a function or method that doesn't
+	match the parameter type in the function or method definition
+	-- a sequence of calls to the 'deref' method converts the type we
+	   provided into the type the parameter needs
+
+
+  - example:
+
+      fn hello(name: &str) {
+	      println!("Hello, {}!", name);
+	  }
+
+	  fn main() {
+	      let m = MyBox::new(String::from("Rust"));
+		  hello(&m);
+	  }
+
+  - &m is a reference to a MyBox<String>
+  	-- Because we implemented the Deref trait on MyBox<T>, Rust can turn
+	   &MyBox<T> into &String by calling deref
+	-- The STL provides an implementation of Deref on String that returns
+	   a string slice, and this is in the API documentation for Deref
+	-- Rust calls deref again to turn the &String into &str, which matches
+	   the hello function's definition
+
+
+  - if Rust didn't implement deref coercion, we would have to write the code
+  	as such:
+
+	  fn main() {
+	      let m = MyBox::new(String::from("Rust"));
+		  hello(&(*m)[..]);
+	  }
+
+    -- the (*m) dereferences the MyBox<String> into a String. Then the
+	   & and [..] take a string slice of the String that is equal to
+	   the whole string to match the signature of hello
+
+
+  - When the Deref trait is defined for the types involved, Rust will
+  	analyze the types and use Deref::deref as many times as necessary to
+	get a reference to match the parameter's type
+	-- the number of times that Deref::deref needs to be inserted is resolved
+	   at compile time, so there is no runtime penalty for taking advantage
+	   of deref coercion
+
+
+
+How Deref Coercion Interacts with Mutability
+  - Similar to how you use the Deref trait to override the * opeartor on
+  	immutable references, you can use the DerefMut trait to override the
+	* operator on mutable references
+
+  - Rust does deref coercion when it finds types and trait implementations
+  	in three cases:
+	* From &T to &U when T: Deref<Target=U>
+	* From &mut T to &mut U when T: DerefMut<Target=U>
+	* From &mut T to &U when T: Deref<Target=U>
+
+  - the first two cases are the same except for mutability
+
+  - the third case is trickier: Rust will also coerce a mutable reference to
+  	an immutable one, but the reverse is not possible
+
+	-- because of the borrowing rules, if you have a mutable reference, that
+	   mutable reference must be the only reference to that data
+	-- converting one mutable reference to one immutable reference will
+	   never break the borrowing rules, but the reverse is not true
+	
+	
+
+  
+		  
+
+
+

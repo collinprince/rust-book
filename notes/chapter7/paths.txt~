@@ -1,0 +1,9 @@
+
+Path
+  - if we want to call a function, we need to know its path
+  
+  - a path can take two forms:
+  	1. absolute path: starts from a crate root by using a crate name or a literal crate
+	2. relative path starts from the current module and uses self, super, or an identifier in the current
+	   module
+	

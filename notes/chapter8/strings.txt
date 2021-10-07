@@ -1,0 +1,187 @@
+
+Storing UTF-8 Encoded Text with Strings
+  - strings are implemented as a collection of bytes, plus some methods to provide useful functionality
+  	when those bytes are interpreted as text
+
+
+What is a String
+  - Rust has only one string type in the core language, which is the string slice 'str' that is usually seen
+  	in its borrowed form &str
+
+  - We've talked about string slices, which are references to some UTF-8 encoded string data stored
+  	elsewhere
+	-- string literals, for example, are stored in the program's binary and are therefore string slices
+
+  - the 'String' type, which is provided by Rust's standard library rather than coded into the core language,
+  	is a growable, mutable, owned, UTF-8 encoded string type
+
+    -- when discussing "strings" in Rust, people usually mean the 'String' and the string slice '&str' types,
+	   not just one of those types
+
+  - Both 'String' and '&str' are UTF-8 encoded
+
+
+Creating a New String
+  - many of the same operations available with Vec<T> are available with String as well, starting with
+  	the new function to create a string:
+
+	  let mut s = String::new();
+
+	  -- this creates a new empty string called s, which we can then load data into
+	  
+  - often we'll have some initial data that we want to start the string with -> For that, we use the to_string
+  	method, which is available on any type that implements the Display trait, as string literals do
+
+	example:
+	  let data = "initial contents";
+
+	  let s = data.to_string();
+
+	  let s = "initial contents".to_string(); // this method also works on a literal directly
+
+
+  - we can also use the function String::from to create a String from a string literal:
+      let s = String::from("initial contents");
+
+  - because strings are used for so many things, we can use many different generic APIs for stirngs,
+  	providing us with a lot of options
+	-- there is no real different between to_string and String::from, so the func to use is up to you
+
+
+
+Updating a String
+  - A String can grow in size and its contents can change, just like the contents of a Vec<T>, if you
+  	push more data into it.
+
+    -- in addition, you can conveniently use the + operator or the "format!" macro to concatentate
+	   String values
+
+
+Appending to a String with push_str and push
+  - we can grow a string by using the push_str method to append a string slice:
+  
+  	  let mut s = String::from("foo");
+	  s.push_str("bar");
+
+    -- push_str takes a string slice because we don't necessary want to take ownership of the parameter
+
+
+  - the push method takes a single character as a parameter and adds it to the String
+
+  	  let mut s = String::from("lo");
+	  s.push('l');
+
+
+
+Concatenation with the + Operator or the format! Macro
+  - you can combine two strings using the + operator:
+
+      let s1 = String::from("Hello, ");
+	  let s2 = String::from("world!");
+	  let s3 = s1 + &s2;  // note that s1 has been moved here and can no longer be used
+
+    -- s3 will contain "Hello, world!" as a result of this code
+	-- s1 is no longer valid after the addition and the reason we used a reference to s2 has to do with
+	   signature of the method that gets called when we use the + operator. The + operator uses the
+	   'add' method, whose signature looks something like this:
+	     fn add(self, s: &str) -> String {...}
+
+	     * this isn't the exact signature that's in the standard library: in the standard library, add
+		   is defined using generics
+
+  - First, s2 has an &, meaning that we're adding a reference of the second string to the first string because
+  	the of the s parameter in the add function: we can only add a &str to a String; we can't add two
+	String values together -> But &s2 has type &String, how does this work?
+
+  - The reason we're able to use &s2 in the call to add is that the compiler can coerce the &String
+  	arguments into a &str. When we call the add method, Rust uses a "deref coercion", which here turns
+	&s2 into &s2[..]; Because 'add' does not take ownership of the s parameter, s2 will be a valid String
+	after this operation
+
+  - Second, we can see in the signature that add takes ownership of self, because self does not have an &.
+  	This means s1 will be moved into the add call and no longer be valid after that
+	-- so, "let s3 = s1 + &s2" actually takes ownership of s1, appends a copy of the contents of s2, and then
+	   returns ownership of the result
+	   * in other words, it looks like it's making a lot of copies but isn't; the implementation
+	   	 is more efficient than copying
+
+
+  - if we need to concatenate multiple strings, the behavior of the + operator gets unwieldly:
+      let s1 = String::from("tic");
+	  let s2 = String::from("tac");
+	  let s3 = String::from("toe");
+
+	  let s = s1 + "-" + &s2 + "-" + &s3; // this will result in "tic-tac-toe"
+
+  - with all of the + and '-' characters, it's difficult to see what's going on. For more complicated
+  	string combing, we can use the format! macro:
+
+      let s1 = String::from("tic");
+	  let s2 = String::from("tac");
+	  let s3 = String::from("toe");
+	  let s = format!("{}-{}-{}", s1, s2, s3); // this also sets s to "tic-tac-toe"
+
+  - this version of the code using format! is much easier to read and doesn't take ownership of any of
+  	its parameters
+
+
+
+Indexing into Strings
+  - Trying to access parts of a String using indexing syntax in Rust, you'll get an error
+    --> Rust strings don't support indexing
+
+
+Internal Representation of Strings
+  - String is a wrapper over a Vec<u8>
+  - indexing is not supported since Rust supports representing Unicode in a UTF-8 format, i.e.
+  	a string that contains non- UTF-8 characters will be represented with each character being 2 bytes
+	-- thus, when a user says they want the 0th index, do they mean the first 2 bytes, the first byte only,
+	   etc.
+
+  - to avoid returning an unexpected value and causing bugs that might not be discovered immediately, Rust
+  	doesn't compile this code at all and prevents misunderstandings early in the development process
+
+
+
+Slicing Strings
+  - indexing into a string is often a bad idea because it's not clear what the return type of the string
+  	indexng operation should be: a byte value, a character, a grapheme cluster, or a string slice
+
+  - Therefore, Rust asks you to be more specific if you really need to use indices to create string slices
+    -- to be more specific in your indexing and indicate that you want a string slice, rather than indexing
+	   using [] with a single number, you can use [] with a range to create a string slice containing
+	   particular bytes:
+
+	     let hello = "Здравствуйте";
+		 let s = &hello[0..4];
+
+	-- Here, s will be a &str that contains the first 4 bytes of the string. earlier, we mentioned that
+	   each of these characters was 2 bytes, which means s will be Зд
+
+
+    -- what would happen if we used &hello[0..1] --> Rust would panic at runtime in the same way as if an
+	   invalid index were accessed in a vector ("byte index 1 is not a char boundary")
+
+  - You should use ranges to create string slices with caution, because doing so can crash your program
+
+
+
+Methods for Iterating Over Strings
+  - You can use the "chars" method to iterate through each char in a string:
+      for c in "नमस्ते".chars() {
+          println!("{}", c);
+      }
+
+  - The "bytes" method returns each raw byte, which might be appropriate for your domain:
+
+
+Summary: Strings are not simple
+  - Rust has chosen to make the correct handling of String data the default behavior for all Rust programs,
+  	which means programmers have to put more thought into handling UTF-8 data upfront
+
+
+	  
+
+ 	
+     
+  

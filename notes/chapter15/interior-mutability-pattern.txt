@@ -1,0 +1,160 @@
+
+RefCell<T> and the Interior Mutability Pattern
+  - Interior mutability is a design pattern in Rust that allows you to mutate data even when there
+  	are immutable references to that data
+	-- normally, this action is disallowed by the borrowing rules
+
+  - to mutate data, the pattern uses 'unsafe' code inside a data structure to bend Rust's usual
+  	rules that govern mutation and borrowing
+
+  - we can use types that use the interior mutability pattern when we can ensure that the borrowing
+  	rules will be followed at runtime, even though the compiler can't guarantee that
+
+  - the 'unsafe' code involved is then wrapped in a safe API, and the outer type is still immutable
+
+  - RefCell<T> follows the interior mutability pattern
+
+
+Enforcing Borrowing Rules at Runtime with RefCell<T>
+  - Unlike Rc<T>, the RefCell<T> type represents single ownership over the data it holds
+
+  - with references and Box<T>, the borrowing rules' invariants are enforced at compile time
+  - with RefCell<T>, these invariants are enforced at runtime
+
+  - the advantages of checking the borrowing rules at compile time are that errors will be caught
+  	sooner in the development process, and there is no impact on runtime performance because
+	all the analysis is completed beforehand
+	-- for those reasons, checking the borrowing rules at compile time is the best choice in the majority
+	   of cases, which is why this is Rust's default
+
+  - the advantages of checking the borrowing rules at runtime instead is that certain memory-safe scenarios
+  	are then allowed, whereas they are disallowed by the compile-time checks
+	-- static analysis, like the Rust compiler, is inherently conservative
+
+  - the RefCell<T> type is useful when you're sure your code follows the borrowing rules but
+  	the compiler is unable to understand and guarantee that
+
+  - similar to Rc<T>, RefCell<T> is only for use in single-threaded scenarios and will give you a
+  	compile-time error if you try using in multithreaded context
+
+  - Recap of the reasons to choose Box<T>, Rc<T>, or RefCell<T>:
+   	-- ownership:
+	   * Rc<T> enables multiple owners of the same data
+	   * Box<T> and RefCell<T> have single owners
+	-- borrows:
+	   * Box<T> allows immutable or mutable borrows checked at compile time
+	   * Rc<T> allows only immutable borrows checked at compile time
+	   * RefCell<T> allows immutable or mutable borrows checked at runtime
+	-- Because RefCell<T> allows mutable borrows checked at runtime, you can mutate the value
+	   inside the RefCell<T> even when the RefCell<T> is immutable
+
+  - mutating the value inside an immutable value is the interior mutability pattern
+
+
+Inferior Mutability: A Mutable Borrow to an Immutable Value
+  - A consequence of the borrowing rules is that when you have an immutable value, you can't borrow it
+  	mutably. For example, this code won't compile:
+	
+	  fn main() {
+	      let x = 5;
+		  let y = &mut x;
+	  }
+
+  - however, there are situations in which it would be useful for a value to mutate itself in its methods
+  	but appear immutable in other code
+	-- code outside the value's methods would not be able to mutate the value
+
+  - using RefCell<T> is one way to get the ability to have interior mutability
+  	-- RefCell<T> does not get around the borrowing rules completely: the borrow checker in the compiler
+	   allows this interior mutability, and the borrowing rules are checked at runtime instead
+	   * if you violate the rules, you'll get a panic! instead of a compiler error
+
+
+
+A Use Case for Interior Mutability: Mock Objects
+  - a 'test double' is the general programming concept for a type used in place of another type during
+  	testing
+
+  - 'mock objects' are specific types of test doubles that record what happens during a test so you can
+  	assert that the correct actions took place
+
+  - we'll create a library that tracks a value against a maximum value and sends messages based on how
+  	close to the maximum value the current value is
+	-- this library could be used to keep track of a user's quote for the number of API calls they're
+	   allowed to make, for example
+
+
+Keeping Track of Borrows at Runtime with RefCell<T>
+  - when creating immutable and mutable references, we use the & and &mut syntax, respectively
+
+  - with RefCell<T>, we use the borrow and borrow_mut methods, which are part of the safe API that
+  	belongs to RefCell<T>
+
+  - the 'borrow' method returns the smart pointer type Ref<T>, and 'borrow_mut' returns the smart pointer
+  	type RefMut<T>
+	-- both types implement Deref, so we can treat them like regular references
+
+  - RefCell<T> keeps track of how many Ref<T> and RefMut<T> smart pointers are currently active
+   	-- every time we call borrow, the RefCell<T> increases its count of how many immutable borrows
+	   are active
+	-- when a Ref<T> value goes out of scope, the count of immutable borrows goes down by one
+
+  - just like the compile-time borrowing rules, RefCell<T> lets us have many imuutable borrows
+  	or one mutable borrow at any point in time
+	-- if we try to violate these rules, rather than getting a compiler error as we would with references,
+	   the implementation of RefCell<T> will panic at runtime
+
+
+  - catching borrowing errors at runtime rather than compile time means that you would find a mistake
+  	in your code later in the development process and possibly not until your code was deployed to
+	production
+	-- your code would also incur a small runtime performance penalty as a result of keeping track
+	   of the borrows at runtime rather than compile time
+
+
+  - however, using RefCell<T> makes it possible to write a mock object that can modify itself to keep
+  	track of the messages it has seen while you're using it in a context where only immutable values
+	are allowed
+
+  - you can use RefCell<T> despite its trade-offs to get more functionality than regular references
+  	provide
+
+
+Having Multiple Owners of Mutable Data by Combining Rc<T> and RefCell<T>
+  - A common way to use RefCell<T> is in combination with Rc<T>
+  	-- Recall that Rc<T> lets you have mutliple owners of some data, but it only gives immutable access
+	   to that data
+
+  - if you have an Rc<T> that holds a RefCell<T>, you can get a value that can have multiple owners and
+  	that you can mutate
+
+
+  - example to be able to modify values in our original list:
+
+  	  #[derive(Debug)]
+	  enum List {
+	      Cons(Rc<RefCell<i32>>, Rc<List>),
+		  Nil,
+	  }
+
+	  use crate::List::{Cons, Nil};
+	  use std::cell::RefCell;
+	  use std::rc::Rc;
+
+	  // ... check out mock_object for this whole example
+
+
+  - by using RefCell<T>, we have an outwardly immutable List value
+  	-- but we can use the methods on RefCell<T> that provide access to its interior mutability
+	   so we can modify our data when we need to
+	-- the runtime checks of the borrowing rules protect us from data races,
+	   and it's sometimes worth trading a bit of speed for this flexibility in our
+	   data structures
+
+  - the standard library has other types that provide interior mutability such as Cell<T>, which is
+  	similar except that instead of giving references to the inner value, the value is copied in
+	and out of the Cell<T>
+
+  - there's also Mutex<T>, which offers interior mutability that's safe to use across threads
+  
+

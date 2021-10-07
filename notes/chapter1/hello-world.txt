@@ -1,0 +1,13 @@
+
+
+<name>!(...) --> macro
+<name>(...) --> function
+
+Rust style: 4 spaces, not tabs
+
+Rust uses semicolons
+
+
+
+
+

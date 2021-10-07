@@ -1,0 +1,5 @@
+
+Enums
+  - enums: allow you to define a type by enumerating its possible variants
+  - Rust's enums are most similar to *algebraric data types* in functional languages
+  	such as F#, OCaml, and Haskell

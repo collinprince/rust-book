@@ -1,0 +1,115 @@
+
+Using Message Passing to Transfer Data Between Threads
+  - message passing: threads or actors communicate by sending each other messages containing
+  	data
+
+  - from Go: "do not communicate by sharing memory; instead, share memory by communicating"
+
+  - major tool for Rust to accomplish message-sending concurrency: channel
+  	-- a channel has two halves:
+	   * transmitter: upstream location where you put messages into the channel
+	   * receiver: location that receives the messages from the transmitter
+	   
+    -- one part of your code calls methods on the transmitter with the data you want
+	   to send, and another part checks the receiving end for arriving messages
+
+    -- a channel is said to be closed if either the transmitter or receiver half is
+	   dropped
+
+
+Creating a Channel
+  - example:
+
+      use std::sync::mpsc;
+
+	  fn main() {
+	      let (tx, rx) = mpsc::channel(); // this won't compile yet, doesn't know what
+		  	  	   	   	 				  // types of messages we want to send
+	  }
+
+  - we create a new channel using the mpsc::channel function
+    -- mpsc: multiple producer, single consumer
+
+  - the way Rust's standard library implements channels means a channel can have
+  	multiple sending ends that produce values but only one receiving end that consumes
+	those values
+	-- multiple streams flowing together into one big river
+
+  - mpsc::channel function returns a tuple, the first element of which is the sending
+  	end and the second element is the receiving end
+	-- tx and rx are traditionally used in many fields for transmitter and receiver
+	   respectively
+
+
+  - the transmitting thread needs to own the transmitting end of the channel to be
+  	able to send messages through the channel
+
+  - the transmitting end has a send method that takes the value we want to send
+  	-- send returns a Result<T, E> type, so if the receiving end has already been dropped
+	   and there's nowhere to send a value, the send operation will return an error
+	   * we use unwrap() in the example in the channels project to panic in case of an
+	   	 error, but in a real application we would handle it properly
+
+
+  - the receiving end of a channel has two useful methods: 'recv' and 'try_recv'
+  	-- recv, short for receive, will block the main thread's execution and wait
+	   until a value is sent down the channel
+	   * once a value is sent, recv will return it in a Result<T,E>
+
+	-- when the sending end of a channel closes, recv will return an error to signal
+	   that no more values will be coming
+
+  - try_recv method doesn't block, but will instead return a Result<T, E> immediately:
+  	an Ok value holding a message if one is available and an Err value if there
+	aren't any messages this time
+
+	-- using try_recv is useful if this thread has other work to do while waiting
+	   for messages: we could write a loop that calls try_recv every so often,
+	   handles a message if one is available, and otherwise does other work for
+	   a little while until checking again
+
+
+
+Channels and Ownership Transference
+  - the ownership rules play a vital role in message sending because they help you
+  	write safe, concurrent code
+
+  - channels and ownership work together to prevent problem
+  	-- example, if we create a string val in the transmitting thread, send val
+	   to the receiver, and then try to use val again in the transmitting thread
+	   after the send call, this will cause a compiler error because send()
+	   takes ownership over val, and then when val is moved, the receiver takes
+	   ownership over it
+
+
+
+Sending Multiple Values and Seeing the Receiver Waiting
+
+  - see the example in the channels project
+
+  - we can treat the receiving thread as an iterator e.g.:
+
+      for received in rx {
+	     // --snip-- do something with received
+	  }
+
+
+  - the receiving thread iteration will stop when the transmitting thread has closed
+  	the channel
+	-- we do not have to call the recv function explicitly anymore
+
+  - because our sender waits 1 second between sending each message and we don't have
+  	any code that pauses or delays in the for loop in the main thread w/ the receiving
+	end, we can tell that the main thread is waiting to receive values from the spawned
+	thread
+
+
+
+Creating Multiple Producers by Cloning the Transmitter
+  - we can create multiple producers to send values to the same receiver by cloning
+  	the transmitting half of the channel
+
+  - we simply call "let tx1 = tx.clone()" -> this clones the transmitter tx and creates
+  	another transmitter tx1 for the same receiver rx
+
+

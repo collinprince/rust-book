@@ -1,0 +1,35 @@
+
+When our logic in main.rs starts to get complicated:
+  - split your program into a main.rs and a lib.rs and move your program's logic to lib.rs
+  - as long as your command line parsing logic is small, it can remain in main.rs
+  - when the command line parsing logic starts getting complicated, extract it from main.rs and
+  	move it to lib.rs
+
+
+Responsibilities of main:
+  - calling the command line parsing logic with the argument values
+  - setting up any other configuration
+  - calling a run function in lib.rs
+  - handling the error if run returns an error
+
+
+Separating concerns
+  - main.rs handles running the program
+  - lib.rs handles all the logic of the task at hand
+
+  - since you can't test main directly, this struct lets you test all of your program's logic
+  	by moving it into functions in lib.rs
+	-- the only code that remains in main.rs will be small enough to verify its correctnes by reading
+	   it
+
+
+Returning Ok(())
+  - the idiomatic way to indicate that we're calling run for its side effects only; it doesn't return
+  	a value we need
+
+
+Good functions for handling errors
+  - expect()
+  - unwrap()
+  - unwrap_or_else( closure func )
+  - if let Err(e) = func(args) { ... }

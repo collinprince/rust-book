@@ -1,0 +1,229 @@
+
+Using the Newtype Pattern for Type Safety and Abstraction
+  - the newtype pattern is useful for statically enforcing that
+  	values are never confused and indicating the units of values
+	-- i.e. a Millimeters and Meters newtype
+	-- if we wrote a function with a parameter of type Millimeters,
+	   we couldn't compile a program that accidentally tried to
+	   call that function with a value of type Meters or a plain u32
+
+  - another use of the newtype pattern is abstracting away some implementation
+  	details of a type: the new type can expose a public API that is
+	different from the API of the private inner type if we used the
+	new type directly to restrict the available functionality
+
+
+  - newtypes can also hide internal implementation
+    -- we could provide a People type to wrap a HashMap<i32, String>
+	   that stores a person's ID associated with their name
+
+    -- code using People would only interact with the public API
+	   we provide, such as a maethod to add a name string to the People
+	   collection
+
+  - newtype is a lightweight way to achieve encapsulation to hide
+  	implementation details
+
+
+Creating Type Synonyms with Type Aliases
+  - Rust provides the ability to declare a type alias to give an
+  	existing type another name
+
+  - example:
+
+    type Kilometers = i32;
+
+  - Kilometers is a synonym for i32
+  - Kilometers is not a separate, new type. Values that have the
+  	type Kilometers will be treated the same as values of type i32:
+
+	  type Kilometers = i32;
+
+	  let x: i32 = 5;
+	  let y: Kilometers = 5;
+
+	  println!("x + y = {}", x + y); // prints "x + y = 10"
+
+
+  - the main use case for type synonyms is to reduce repetition
+
+    -- we can replace a length type such as `Box<dyn Fn() + Send + 'static>`
+	   with `type Thunk = Box<dyn Fn() + Send + 'static>` and then reuse
+	   the Thunk type throughout our code rather than having to write
+	   out the actual long type
+
+
+  - type aliases are also commonly used with the Result<T, E> type for
+  	reducing repetition
+
+    -- example:
+
+	   use std::fmt;
+	   use std::io::Error;
+
+	   // type alias
+	   type Result<T> = std:::result::Result<T, std::io::Error>;
+	   
+	   // we can then use the generic Result<T> type when we always
+	   // want to use the std::io::Error type for E
+
+
+The Never Type that Never Returns
+
+  - Rust has a special type ! that's known in type theory lingo as the
+  	empty type because it has no values
+
+  - in Rust it is called the never type because it stands in the place
+  	of the return type when a function will never return
+
+  - example:
+
+  	  fn bar() -> ! {
+	    // --snip--
+	  }
+
+  - the code example is read as "the function bar returns never"
+
+
+  - functions that return never are called diverging functions
+    -- we can't create values of the type ! so bar can never possibly
+	   return
+
+  - example of valid code that uses !:
+
+    let guess: u32 = match guess.trim().parse() {
+	    Ok(num) => num, // has type u32
+		Err(_) => continue, // has type !
+	};
+
+  - match arms must all return the same type, but somehow we are able
+  	to return u32 and ! type for the above match
+
+  - Because ! can never have a value, Rust decides that the type of guess
+  	is u32
+	-- the formal way of describing this behavior is that expressions of
+	   type ! can be coerced into any other type
+
+    -- we can use continue here because continue doesn't return a value.
+	   instead, it moves control back to the top of the loop, so in
+	   the Err case, we never assign a value to guess
+
+
+  - the never type is useful with the panic! macro as well
+  	-- when we have panic! in a match arm, it also will return a type
+	   of !, so Rust will just conclude that the returned type
+	   is whatever the non ! type is in this match arm
+
+
+  - one final expression that has the type ! is a loop:
+
+      print!("forever ");
+	  loop {
+	      print!("and ever ");
+	  }
+
+    -- the loop never ends, so ! is the value of the expression
+	-- this wouldn't be true if we included a break, because the
+	   loop would terminate when it got to the break
+
+
+
+Dynamically Sized Types and the Sized Trait
+
+  - sometimes referred to as DSTs or unsized types, these types
+  	let us write code using values whose size we can know only at runtime
+
+  - example: str -> str is a DST
+    -- we can't know how long the string is until runtime, meaning
+	   we can't create a variable of type str, nor can take an argument
+	   of type str
+
+    -- the following code does not work:
+
+	   let s1: str = "Hello there!";
+	   let s2: str = How's it going?";
+
+
+  - Rust needs to know how much memory to allocate for any value of a
+  	particular type, and all values of a type must use the same amount
+	of memory
+	-- if Rust allowed us to write this code, these two str values would
+	   need to take up the same amount of space -> but they have different
+	   lengths
+
+
+  - in order to hold a dynamically sized type, we make the types of s1 and
+  	s2 `&str` rather than `str`
+	-- the slice data structure stores the starting position and the length
+	   of the slice
+
+
+    -- althought &T is a single value that stores the memory
+	   address of where the T is located, a &str is two values:
+	   * the address of the str
+	   * the length of the str
+
+
+    -- therefore, the size of &str at compile time is usize*2 for this reason
+
+
+  - in general this is how dynamically sized types are implemented in Rust:
+  	-- they have an extra bit of metadata that stores the size of the
+	   dynamic information
+
+  - the golden rule of DSTs is that we must always put values of
+  	DSTs behind a pointer of some kind
+
+
+  - we can combine str with all kinds of pointers: for example
+  	Box<str> or Rc<str>
+
+    -- we've seen this before --> every trait is a dynamically sized type
+	   we can refer to by using the name of the trait
+	   * to use traits as trait objects, we must put them
+	   	 behind a pointer, such as &dyn Trait of Box<dyn Trait>
+		 (Rc<dyn Trait> works too)
+
+
+  - to work with DSTs, Rust has a particular trait called the Sized trait
+  	to determine whether or not a type's size is known at compile time
+	-- this trait is automatically implemented for everything whose
+	   size is known at compile time
+	-- in addition, Rust imlicitly adds a bound on Sized to every
+	   generic function --> that is a generic function definition like this:
+
+	   fn generic<T>(t: T) {
+	     // --snip--
+	   }
+
+    -- is actually treated as though we had written this:
+
+	   fn generic<T: Sized>(t: T) {
+	     // --snip--
+	   }
+
+    -- by default, generic functions will work only on types that have
+	   a known size at compile time. However, you can use the
+	   following special syntax to relax this restriction:
+
+	   fn generic<T: ?Sized>(t: &T) {
+	     // --snip--
+	   }
+
+  - a trait bound on ?Sized means "T may or may not be Sized" and this
+  	notation overrides the default that generic types must have a known
+	size at compile time
+	-- the ?Trait syntax with this meaning is only available for Sized,
+	   not any other traits
+
+    -- also note that we switched the type of the t parameter from T to &T
+	   * because the type might not be Sized, we need to use it behind
+	   	 some kind of pointer -> in this case we've chosen a reference
+	   	 
+ 
+	
+
+ 
+	
+  	
+  

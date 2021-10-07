@@ -1,0 +1,62 @@
+
+Running Code on Cleanup with the Drop Trait
+  - Drop: lets you customize what happens when a value is about to go out of scope
+
+  - we're introducing Drop in the context of smart pointers because the functionality
+  	of the Drop trait is almost always used when implementing a smart pointer
+	-- for example, when a Box<T> is dropped it will deallocate the space on the heap
+	   that the box points to
+
+  - the Drop trait requires you to implement one method named drop that takes a mutable reference
+  	to self
+
+  - the Drop trait is included in the prelude, so we don't need to bring it into scope
+
+  - Rust will automatically call the drop we define for our Drop trait implementation for us when
+  	our instances go out of scope
+	-- variables are dropped in the reverse order of their creation
+
+
+
+Dropping a Value early with std::mem::drop
+  - sometimes you may want to clean up a value early
+    -- one example is when using smart pointers that manage locks: you might want to force the drop
+	   method that releases the lcok so that other code in the same scope can acquire the lock
+
+  - Rust doesn't let you call the Drop trait's drop method manually -> instead you have to call
+  	the std::mem::drop function provided by the standard library if you want to force a value to be
+	dropped before the end of its scope
+
+    -- if we try to call drop manually, we'll get a compile time error that explicit destructor calls
+	   are not allowed
+
+    -- Rust doesn't let us call drop explicitly because Rust would still automatically call drop on
+	   the value at the end of main
+	   * this would be a 'double free' error because Rust would be trying to clean up the same value
+	   	 twice
+
+  - if we need to force a value to be cleaned up early, we can use the std::mem::drop function
+
+
+  - the std::mem::drop function is different from the drop method in the Drop trait
+    -- we call it by passing the value we want to force to be dropped early as an argument
+	-- the function is in the prelude
+
+
+  - you can use code specified in a Drop trait implementation in many ways to make cleanup convenient
+  	and safe
+	-- for instance, you could use it to create your own memory allocator
+
+    -- with the Drop trait and Rust's ownership system, you don't have to remember to clean up because
+	   Rust does it automatically
+
+  - You also don't have to worry about problems resulting from accidentally cleaning up values still
+  	in use: the ownership system that makes sure references are always valid also ensures that drop
+	gets called only once when the value is no longer being used
+
+
+
+
+
+  	
+  

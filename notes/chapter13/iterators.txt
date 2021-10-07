@@ -1,0 +1,84 @@
+
+Iterator Trait
+  - basically looks like this:
+
+      pub trait Iterator {
+	      type Item;
+
+		  fn next(&mut self) -> Option<Self::Item>:
+
+		  // methods with default implementations elided
+	  }
+
+
+
+Methods that create Iterators
+  - on arrays we can call:
+  	* iter() -> produces an iterator over immutable references
+	* into_iter() -> produces an iterator that takes ownership of a vector and returns owned values
+	* iter_mut() -> produces an iterator over mutable references
+
+
+Methods that Consume the Iterator
+  - the Iterator trait has a number of different methods with default implementations provided by the
+  	standard library -> you can find out about these methods by looking in the standard library API
+
+  - methods that call next are called *consuming adaptors*, because calling them uses up the iterator
+  	-- example: sum method
+
+	     fn iterator_sum() {
+		     let v1 = vec![1, 2, 3];
+
+			 let v1_iter = v1.iter();
+
+			 let total: i32 = v1_iter.sum();
+
+			 assert_eq!(total, 6);
+		 }
+
+  - we aren't allowed to use v1_iter after the call to sum because sum takes ownership of the iterator
+  	we call it on
+
+
+Methods that Produce Other Iterators
+  - iterator adaptors: allow you to change iterators into different kinds of iterators
+    -- you can chain multiple calls to iterator adaptors to perform complex actions in a readable way
+
+  - because all iterators are lazy, you have to call one of the consuming adaptor methods to get results
+  	from calls to iterator adaptors
+
+  - example: map
+
+      let v1: Vec<i32> = vec![1, 2, 3];
+	  
+	  let v2: Vec<_> = v1.iter().map(|x| x + 1).collect(); // we use collect to gather up results of map into Vec
+
+	  assert_eq!(v2, vec![2, 3, 4]);
+
+
+
+
+Iterator Performance vs Arrays & loops
+  - Iterators actually tend to perform a bit better than arrays w/ loops even though they are a higher
+  	level abstraction
+	-- they get compiled down to low-level code that can end up being more performant
+
+
+  - Rust's compiler is smart enough to do loop unrolling for small fixed length iterators, leading
+  	to even more optimzation of code
+
+  - iterators and closures make code seem like it's higher level but don't impose a runtime performance
+  	penalty for doing so
+
+  - iterators and closures are implemented so that runtime performance is not affected, part of
+  	Rust's goal to strive to provide zero-cost abstractions
+
+
+
+
+  
+
+
+ 
+ 	  
+	

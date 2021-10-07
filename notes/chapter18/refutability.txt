@@ -1,0 +1,34 @@
+
+Refutability: Whether a Pattern Might Fail to Match
+  - patterns come in two forms:
+    * irrefutable: patterns that will match for any possible value passed
+	  - Ex: `let x = 5` -> x matches anything and therefore cannot fail to match
+	* refutable: patterns that can fail to match for some possible value
+	  - Ex: `if let Some(x) = a_value` -> if the value in a_value is None rather
+	  	than Some, the Some(x) pattern will not match
+
+  - function paramters, let statements, and for loops can only accept irrefutable
+  	patterns, because the program cannot do anything meaningful when values
+	don't match
+
+  - the `if let` and `while let` expressions accept refutable and irrefutable
+  	patterns, but the compiler warns against irrefutable patterns because by
+	definition they're intended to handle possible failure: the functionality
+	of a conditional is in its ability to perform differently depending on success
+	or failure
+
+
+  - generally, you shouldn't have to worry about the distinction between
+  	refutable and irrefutable patterns
+	-- compiler will throw an error if we try to use a refutable pattern where
+	   an irrefutable pattern is required
+	-- compiler will warn us if we try to use an irrefutable pattern where a
+	   refutable pattern is expected
+
+  - match arms must use refutable patterns, except for the alst arm, which
+  	should match any remaining values with an irrefutable pattern
+	-- Rust allows us to use an irrefutable pattern in a match with only
+	   one arm, but this syntax isn't particularly useful and could be replaced
+	   with a simpler let statement
+	
+

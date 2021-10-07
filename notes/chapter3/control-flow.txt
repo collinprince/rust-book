@@ -1,0 +1,112 @@
+
+if Expressions
+  - if followed by a condition
+    -- the condition must be a bool
+	-- no parentheses are required around the condition
+	-- the condition is followed by a block marked by {}
+
+  - example of bad condition (that would be valid in C, but not in Rust):
+  
+  	  let number = 3;
+	  if number { // this will cause a compile time error since number is not a bool
+	  	 println!("number was three");
+	  }
+
+  - Rust does not automatically try to convert non-Boolean types to Boolean values, you must
+  	explicitly do this e.g.
+	
+	  let number = 3;
+	  if number != 0 {
+	  	 println!("number was something other than zero");
+	  }
+
+
+Handling Multiple Conditions with else if
+  - you can have multiple conditions by combining 'if' and 'else' in an 'else if' expression
+	
+
+Using if in a let Statement
+  - because if is an expression, we can use it on the right side of a let statement
+    ex:
+	  let condition = true;
+	  let number = if condition { 5 } else { 6 };
+	  
+	  println!("The value of number is: {}", number);
+
+  - when we use this type of ternary logic, we must make sure that both possible return values of
+  	the different arms have the same data type, as the following exmaple would cause a compile time error
+	  let condition = true;
+	  let number = if condition { 5 } else { "six" };
+
+
+
+Repetition with Loops
+  - Rust has three kinds of loops:
+    -- loop
+	-- while
+	-- for
+
+
+Repeating code with loop
+  - the loop keyword tells Rust to execute a block of code over and over again forever or until you explicitly
+  	tell it to stop
+	-- infinite loop mechanism, you can break out of the loop with break
+
+
+Returning Values from Loops
+  - one of the uses of a loop is to retry an operation you know might fail, such as checking whether a
+  	thread has completed its job. In order to pass the result of that operation to the rest of your code,
+	you can add the value you want returned after the break expression you use to stop the loop
+	-- e.g.
+	     let mut counter = 0;
+
+		 let result = loop {
+		   counter += 1;
+
+		   if counter == 10 {
+		     break counter * 2;
+		   }
+		 };
+
+		 println!("The result is {}", result); // prints 20
+
+
+
+Conditional loops with while
+  - conditional loop
+  - example:
+  	  let mut number = 3;
+
+	  while number != 0 {
+	    println!("{}!", number);
+		
+		number -= 1;
+	  }
+	  println!("LIFTOFF!");
+
+
+Looping Through a Collection with for
+  - iterating through a container such as an array using a while loop (i.e. using an iterator int) is
+  	slower than iterating through the collection itself (due to runtime bounds check) and more error
+	prone (greater chance that we index incorrectly and cause a runtime panic)
+
+  - As a more concise alternative, you can use a for loop and execute some code for each item in a
+  	collection.
+	
+  - example:
+  	  let a = [10, 20, 30, 40, 50];
+	  for element in a.iter() {
+	    println!("the value is: {}", element);
+	  }
+
+
+  - in order to iterate through a set number of events (such as a common for loop construct of iterating
+  	for a certain number of intervals), we can use a Range to iterate through w/ a for loop
+
+  - example of Range for loop (and also rev() method to reverse the range):
+      for number in (1..4).rev() {
+	    println!("{}!", number);
+	  }
+	  println!("LIFTOFF!");
+
+

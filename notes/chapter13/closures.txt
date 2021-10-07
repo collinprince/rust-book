@@ -1,0 +1,349 @@
+Closures: Anonymous Functions that Can Capture Their Environment
+  - unlike functions, closures can capture values from the scope in which they're
+  	defined
+
+
+Use Case for Closures
+  - we want to refer to an expensive function call only once in a function, but
+  	defer the expensive calculation to only where we actually need the result
+
+
+Refactoring with Closures to Store Code
+  - Instead of always calling the expensive_calculation function at the start of
+  	our function body, we define a closure and store the closure in a variable
+	rather than storing the result of the function call
+	-- we can actaully move the whole body of simulated_expensive_calcuation
+	   within the closure we're introducing here:
+
+	     let expensive_closure = |num| {
+		     println!("calculating slowly...");
+			 thread::sleep(Duration::from_secs(2));
+			 num
+		 };
+
+
+
+  - Closure syntax:
+
+    -- "|param1, param2|" : we start with a pair of vertical pipes inside which we
+	   specify the parameters to the closure; this syntax was chosen because of
+	   its similarity to closure definitions in Smalltalk and Ruby
+
+    -- "{ ... }" : after the vertical pipes, we place the curly braces which hold
+	   the body of the closure
+	   * these are optional if the closure body is a single expression
+
+    -- "...};" : after the curly braces, we need a semicolon to complete
+	   the let statement
+
+
+  - this let statement means expensive_closure contains the definition of an
+  	anonymous function, not the resulting value of calling the anonymous function
+
+
+Closure Type Inference and Annotation
+  - closures don't require you to annotate the types of the parameters or the
+  	return value like fn functions do
+
+  - type annotations are required on functions because they're part of an explicit
+  	interface exposed to your users
+
+  - closures are usually short and relevant only within a narrow context rather
+  	than in any arbitrary scenario
+	-- within these limited contexts, the compiler is reliably able to infer the
+	   types of the parameters and the return type, similar to how it's
+	   able to infer the types of most variables
+
+  - as with variables, we can add type annotations if we want to increase
+  	explicitness and clarity at the cost of being more verbose than is strictly
+	necessary
+	-- example:
+
+	     let expensive_closure = |num: u32| -> u32 {
+		     println!("calculating slowly...");
+			 thread::sleep(Duration::from_secs(2));
+			 num
+		 };
+
+
+    -- 4 behaviorally-equivalent defns:
+
+	     fn  add_one_v1   (x: u32) -> u32 { x + 1 }   // fn
+		 let add_one_v2 = |x: u32| -> u32 { x + 1 };  // annotated closure
+		 let add_one_v3 = |x|             { x + 1 };  // bracketed closure
+		 let add_one_v4 = |x|               x + 1  ;  // 1-liner closure
+
+  - Closure definitions will have one concrete type inferred for each of their
+  	parameters and for their return value
+	-- if we try to call the same closure with two different types for
+	   the same param, this will call a compiler error fo rmismatched
+	   types
+
+    -- the first time we call example_closure with a String value, the compiler
+	   infers the type of x and the return type of the closure to be String
+	   * those types are then locked into the closure in example_closure,
+	   	 and we get a type error if we try to use a different type w/ the same
+		 closure
+
+
+
+Storing Closures Using Generic Parameters and the Fn Traits
+  - We can create a struct that will hold the closure and the resulting value of
+  	calling the closure
+	-- the struct will execute the closure only if we need the resulting
+	   value, and it will cache the resulting value so the rest of our code
+	   doesn't have to be responsible for saving and reusing the result
+	   AKA memoization or lazy evaluation
+
+  - to make a struct that holds a closure, we need to specify the type of the
+  	closure, because a struct definition needs to know the types of each of its
+	fields
+
+  - each closure instance has its own unique anonymous type: that is, even if two
+  	closures have the same signature, their types are still considered different
+	-- to define structs, enums, or function parameters that use closures,
+	   we use generic and trait bounds
+
+
+  - the Fn traits are provided by the standard library. All closures implement
+  	at least one of the traits: Fn, FnMut, or FnOnce
+
+  - we add types to the Fn trait bound to represent the types of the parameters
+  	and return values the closures must have to match this trait bound.
+	-- in this case, our closure has a parameter of type u32 and returns a u32,
+	   so the trait bound we specify is Fn(u32) -> u32
+
+    -- example:
+
+	     struct Cacher<T>
+		 where
+		     T: Fn(u32) -> u32,
+		 {
+		     calculation: T,
+			 value: Option<u32>,
+		 }
+
+
+  - the Cacher struct has a calculation field of the generic type T.
+  	-- the trait bounds on T specify that it's a clsoure by using the Fn trait
+	-- any closure we want to store in the calculation field must have
+	   one u32 parameter (specified within the parentheses after Fn) and must
+	   return u32 (specified after the ->)
+
+
+  - Note: functions can implement all three of the Fn traits too. If what we want
+  	to do doesn't require capturing a value from the environment, we can use a
+	function rather than a closure where we need somethign that implements
+	an Fn trait
+
+  - The value field is of type Option<u32>
+    -- before we execute the clsoure, value will be None
+	-- when code using a Cacher asks for the result of the closure, the Cacher
+	   will execute the closure at that time and store the result within a Some
+	   variant in the value field
+	   * then if the code asks for the result of the closure again, instead of
+	   	 executing the closure again, the Cacher will return the result held
+		 in the Some variant
+
+
+
+  - the logic of Cacher:
+
+      impl<T> Cacher<T>
+	  where
+	      T: Fn(u32) -> u32,
+	  {
+	      fn new(calculation: T) -> Cacher<T> {
+		      Cacher {
+			      calculation,
+				  Value: None,
+			  }
+		  }
+
+		  fn value(&mut self, arg: u32) -> u32 {
+		      match self.value {
+			      Some(v) => v,
+				  None => {
+				      let v = (self.calculation)(arg);
+					  self.value = Some(v);
+					  v
+				  }
+			  }
+		  }
+      }
+
+  - We want Cacher to manage the struct fields' values rather than letting the
+  	calling code potentially change the values in these fields directly, so these
+	fields are private
+
+  - Cacher::new takes a generic parameter T, which we've defined as having the
+  	same trait bound as the Cacher struct. Cacher::new returns a Cacher instance
+	that holds the closure specified in the calculation field and a None value
+	in the value field, because we haven't executed the closure yet
+
+  - In the calling code, instead of calling the closure directly, it will
+  	call the value method, which will check whether we've stored the result
+	of the closure yet and will return that stored result if we have, or
+	will compute and store/return the value if not
+
+
+  - example of calling code:
+
+  	  fn generate_workout(intensity: u32, random_number: u32) {
+	      let mut expensive_result = Cacher::new(|num| {
+		      println!("calculating slowly...");
+			  thread::sleep(Duration::from_secs(2));
+			  num
+		  });
+
+		  if intensity < 25 {
+		      println!("Today, do {} pushups!", expensive_result.value(intensity));
+			  println!("Next, do {} situps!", expensive_result.value(intensity));
+		  } else {
+		      if random_number == 3 {
+			      println!("Take a break today! Remember to stay hydrated!");
+			  } else {
+			      println!(
+				      "Today, run for {} minutes!",
+					  expensive_result.value(intensity)
+				  );
+			  }
+		  }
+	  }
+
+
+  - The Cacher takes care of the logic necessary to ensure we aren't calling
+  	the expensive calculation more than we need to so generate_workout can focus
+	on the business logic
+
+
+
+Limitations of the Cacher Implemenation
+  - There are two problems with the current implemenation of Cacher
+  	that would make reusing it in different contexts difficult
+
+
+  - First problem: a Cacher instance assumes it will always get the same value
+  	for the paramter arg to the value method. That is, this test of Cacher will fail:
+
+	  #[test]
+	  fn call_with_different_values() {
+	      let mut c = Cacher::new(|a| a);
+		  
+		  let v1 = c.value(1);
+		  let v2 = c.value(2);
+		  
+		  assert_eq!(v2, 2); // v2 will have a value of 1
+	  }
+
+    -- we can modify Cacher to hold a hash map rather than a single vlaue.
+	   The keys of the hash map will be the arg values that are passed in,
+	   and the values of the hash map will be the result of calling the closure
+	   on that key
+
+    -- instead of looking at whether self.value directly has a Some or a None value,
+	   the value function will look up the arg in the hash map and return the value
+	   if it's present. If it's not present, the Cacher will call the closure
+	   and save the resulting value in the hash map associated with its arg value
+
+
+  - Second Problem: current Cacher implementation only accepts closures that
+  	take one parameter of type u32 and return a u32
+	-- we might want to cache the results of closures that take a string slice
+	   and return usize values, for example
+
+    -- to fix this issue, try introducing more generic parameters to increase the
+	   flexibility of the Cacher functionality
+
+
+
+Capturing the Environment with Closures
+  - closures have an additional capability that functions don't have: they can
+  	capture their environment and access variables from the scope in which they're
+	defined
+
+  - example:
+
+      fn main() {
+	      let x = 4;
+
+		  let equal_to_x = |z| z == x;
+
+		  let y = 4;
+
+		  assert!(equal_to_x(y));
+	  }
+
+    -- even though x is not one of the parametesr of equal_to_x, the equal_to_x
+	   closure is allowed to use the x variable that's defined in the same scope
+	   that equal_to_x is defined in
+
+    -- we cannot do the same with functions -> the code won't compile as Rust doesn't
+	   capture data from the environment when we define functions
+	   * we don't want to pay the overhead of storing environment variables
+	   	 in memory in general when we define functions, we leave this to the
+		 more limited case of closures
+
+
+  - Closures can capture values from their environment in three ways, which directly
+  	map to the three ways a function can take a parameter: taking ownership,
+	borrowing mutably, and borrowing immutably. These are encoded in three
+	Fn traits as follows:
+
+	  -- FnOnce consumes the variable it captures from its enclosing scope, known
+	  	 as the closure's environment. To consume the captured variables, the
+		 closure must take ownership of these variables and move them into the
+		 closure when it is defined. The Once part of the name represents the
+		 fact that the closure can't take ownership of the same variables more than
+		 once, so it can be called only once
+
+      -- FnMut can change the environment because it mutably borrows values
+	  -- Fn borrows values from the environment immutably
+
+
+  - When you create a closure, Rust infers which trait to use based on how the
+  	closure uses the values from the environment
+	-- All closures implement FnOnce because they can all be called at least once
+	-- Closures that don't move the capture variables also implement FnMut, and
+	   closures that don't need mutable access to the captured variables also
+	   implement Fn
+
+
+  - If you want to force the closure to take ownership of the values it uses in
+  	the environment, you can use the move keyword before the parameter list
+	-- this technique is mostly useful when passing a closure to a new thread
+	   to move the data so it's owned by the new thread
+
+
+  - Note: move closures may still implement Fn or FnMut, even though they
+  		  capture variables by move. This is because the traits implemented
+		  by a closure type are determined by what the closure does with captured
+		  values, not how it captures them. The move keyword only specifies the
+		  latter
+
+
+  - move example:
+
+      let x = vec![1, 2, 3];
+	  let equal_to_x = move |z| z == x;
+
+	  println!("Can't use x here: {:?}", x); // this will cause compiler error
+	  				  	  		  		 	 // since we moved x earlier
+
+  - most of the time when specifying one of the Fn trait bounds, you can start
+  	with Fn and the compiler will tell you if you need FnMut or FnOnce based on
+	what happens in the closure body
+
+  - to illustrate situations where closures that can capture their environment
+  	are useful as function parameters, let's move on to our next topic: iterators
+	  
+
+		 
+
+	
+  
+
+
+
+
+	

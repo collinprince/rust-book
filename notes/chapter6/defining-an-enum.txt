@@ -1,0 +1,176 @@
+
+Enums
+  - enums: allow you to define a type by enumerating its possible variants
+  - Rust's enums are most similar to *algebraric data types* in functional languages
+  	such as F#, OCaml, and Haskell
+
+
+Defining an Enum
+  - example:
+  	  enum IpAddrKind {
+	    V4,
+		V6,
+	  }
+
+
+Enum Values
+  - we can create instances of each of the two variants of IpAddrKind like this:
+  	  let four = IpAddrKind::V4;
+	  let six = IpAddrKind::V6;
+
+  - variants of the enum are namespaced under its identifier, and we use a double colon to separate
+  	the two
+
+  - both values IpAddrKind::V4 and IpAddrKind::V6 are of the same type: IpAddrKind
+
+  - we can then define a function that takes any IpAddrKind:
+
+      fn route(ip_kind: IpAddrKind) {}
+
+    which we can then call with either variant
+	  route(IpAddrKind::V4)
+	  route(IpAddrKind::V6)
+
+
+  - we can also use Enums to provide better design of structs: we can have struct types have a
+  	field which takes in an enum in addition to other data fields, allowing us to define
+	data along with the meaning of our enum
+
+	example:
+		enum IpAddrKind {
+	        V4,
+			V6,
+		}
+
+		struct IpAddr {
+		    kind: IpAddrKind,
+			address: String,
+		}
+
+		let home = IpAddr {
+		    kind: IpAddrKind::V4,
+			address: String::from("127.0.0.1"),
+		};
+
+
+  - we can represent the same concept of bundling together an enum and a struct in a more concise way using
+  	just an enum, rather than an enum inside a struct, byp utting data directly into each enum variant
+
+	example: 
+	    enum IpAddr {
+	        V4(String),
+			V6(String),
+		}
+
+		let home = IpAddr::V4(String::from("127.0.0.1"));
+		let loopback = IpAddr::V6(String::from("::1"));
+
+
+  - another advantage to using an enum rather than a struct: each variant can have different types
+  	and amounts of associated data
+
+	example:
+	    enum IpAddr {
+		    V4(u8, u8, u8, u8),
+			V6(String)
+		}
+
+		let home = IpAddr::V4(127, 0, 0, 1);
+		let loopback = IpAddr::V6(String::from("::1"));
+
+
+
+  - you can put any kind of data inside an enum variant: strings, numeric types, or structs, for example
+    -- you can even include another enum
+
+
+  - one last similarity between enums and structs: just as we're able to define methods on structs using impl,
+  	we're also able to define methods on enums
+
+	example:
+
+	    impl Message {
+		    fn call(&self) {
+			    // method body would be defined here
+			}
+		}
+
+		let m = Message::Write(String::from("hello"));
+		m.call();
+
+
+  - the body of the method would use self to get the value that we called the method on. In this example,
+  	we've created a variable m that has the value Message::Write(String::from("hello")),
+	and that is what self will be in the body of the call method when m.call() runs
+
+
+
+
+The Option Enum and Its Advantages Over Null Values
+  - Option type: an enum defined by the standard library, used in many places because it encodes the
+  	very common scenario in which a value coule be something or it could be nothing
+	-- this means the compiler can check whether you've handled all the cases you should be handling;
+	   this functionality can prevent bugs that are extremely common in other programming languages
+
+  - Rust doesn't have a null feature --> this avoids many issues that other languages see in which
+  	a null value is used in a non-null manner which causes errors
+
+  - Rust has an enum that can encode the concept of a value being present or absent.
+  	This enum is Option<T> and it is defined by the standard library as follows:
+
+	  enum Option<T> {
+	      Some(T),
+		  None
+	  }
+
+  - The Option<T> enum is so useful that it's even included in the prelude; you don't need to bring it
+  	into scope explicitly
+	-- in addition, so are its variants: you can use Some and None directly without the Option:: prefix
+	-- <T> is a generic type parameter
+
+	examples of Some/Option:
+
+	  let some_number = Some(5);
+	  let some_string = Some("a string");
+
+	  let absent_number: Option<i32> = None;
+
+
+  - if we use None rather than Some, we need to tell Rust what type of Option<T> we have, because the
+  	compiler can't infer the type that the Some variant will hold by looking only at a None value
+
+  - when we have a Some value, we know that a value is present and the value is held within the Some
+  - when we have a None value, in some sense, it means the same thing as null: we don't have a valid
+  	value
+
+  - Option<T> is better than having null because Option<T> and T are different types, therefore the compiler
+  	won't let us use an Option<T> value as if it were definitively a valid value
+
+    example (this code won't compile) --> Rust will not be able to add together i8 and Option<i8> type: 
+      let x: i8 = 5;
+	  let y: Option<i8> = Some(5);
+
+	  let sum = x + y;
+
+  - You need to convert an Option<T> to a T before you can perform T operations with it
+    -- Generally, this helps catch one of the most common issues with null: assuming that something isn't
+	   null when it actually is
+    -- If you have a value that can possibly be null, you must explicitly opt in by making the type of
+	   that value Option<T>
+	-- Everywhere that a value has a type that isn't an Option<T>, you can safely assume that the value
+	   isn't null
+
+  - Option<T> defines a large number of methods that are useful in different situations and can be used
+  	to extract the T type from it if it is non-null
+
+  - In general to handle the Option<T> type, you want some code that will only run if the the value
+  	is Some(T) and the inner T value is used, and another piece of code that will only run if the value is None
+
+	--> the match expression is a control flow construct that does just this when used with enums
+   
+
+
+  
+  
+
+
